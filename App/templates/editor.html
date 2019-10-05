@@ -1,4 +1,20 @@
-{% extends "_base.html" %}
-{% block content %}
-    <h1>Editor</h1>
+{% extends "_base.html" %} {% block content %}
+<!-- Load MxGraph -->
+<script>
+	mxBasePath = "../static/mxgraph-master/javascript/src";
+</script>
+<script src="{{ url_for('static', filename='mxgraph-master/javascript/src/js/mxClient.js') }}"></script>
+
+<!-- Editor -->
+<script defer src="{{ url_for('static', filename='js/editor.js') }}"></script>
+
+<h1>Editor</h1>
+
+<div
+	id="graphContainer"
+	style="overflow:hidden;width:600px;height:600px;border: solid black 2px"
+>
+	<!-- Graph Injected Here -->
+</div>
+
 {% endblock content %}
