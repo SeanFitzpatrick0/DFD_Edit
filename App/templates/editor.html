@@ -1,20 +1,40 @@
 {% extends "_base.html" %} {% block content %}
-<!-- Load MxGraph -->
-<script>
-	mxBasePath = "../static/mxgraph-master/javascript/src";
-</script>
-<script src="{{ url_for('static', filename='mxgraph-master/javascript/src/js/mxClient.js') }}"></script>
+<style>
+	#toolbar {
+		position: absolute;
+		overflow: hidden;
+		padding: 2px;
+		left: 0px;
+		top: 0px;
+		width: 24px;
+		bottom: 0px;
+		border: solid 1px black;
+	}
+	#graph {
+		position: absolute;
+		overflow: hidden;
+		left: 24px;
+		top: 0px;
+		right: 0px;
+		bottom: 0px;
+		border: solid 1px black;
+	}
+</style>
 
-<!-- Editor -->
-<script defer src="{{ url_for('static', filename='js/editor.js') }}"></script>
-
-<h1>Editor</h1>
-
-<div
-	id="graphContainer"
-	style="overflow:hidden;width:600px;height:600px;border: solid black 2px"
->
-	<!-- Graph Injected Here -->
+<div id="editor">
+	<div id="toolbar"></div>
+	<div id="graph"></div>
 </div>
 
+<!-- Load MxGraph -->
+<script>
+	mxBasePath =
+		"{{ url_for('static', filename='mxgraph-master/javascript/src') }}";
+</script>
+<script src="{{ url_for('static', filename='mxgraph-master/javascript/src/js/mxClient.js') }}"></script>
+<!-- Create Editor -->
+<script src="{{ url_for('static', filename='js/editor/editor.js') }}"></script>
+<script>
+	main("{{ url_for('static', filename='js/editor') }}");
+</script>
 {% endblock content %}
