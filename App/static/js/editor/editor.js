@@ -3,80 +3,113 @@ function main(editor_path) {
 	if (!mxClient.isBrowserSupported()) {
 		mxUtils.error("This browser is not supported.", 200, false);
 	} else {
-		// Select containers
-		var toolbar_container = document.getElementById("toolbar");
-		var graph_container = document.getElementById("graph");
-
-		// Define an icon for creating connecting flow
-		mxConnectionHandler.prototype.connectImage = new mxImage(
-			`${editor_path}/images/connector_icon.gif`,
-			16,
-			16
+		// Create Editor
+		let graph_container = document.getElementById("graph");
+		let toolbar_container = document.getElementById("toolbar");
+		var editor = create_editor(
+			`${editor_path}/config/keyhandler-commons.xml`,
+			graph_container
 		);
-
-		// Create toolbar
-		var toolbar = new mxToolbar(toolbar_container);
-		toolbar.enabled = false;
-
-		// Creates the model and graph
-		var model = new mxGraphModel();
-		var graph = new mxGraph(graph_container, model);
-
-		// Enable new connections in the graph
-		graph.setConnectable(true);
-		graph.setMultigraph(false);
-
-		// Stops editing on enter or escape keypress
-		var keyHandler = new mxKeyHandler(graph);
-		var rubberband = new mxRubberband(graph);
-
-		var create_item = (icon, w, h, style) => {
-			var vertex = new mxCell(null, new mxGeometry(0, 0, w, h), style);
-			vertex.setVertex(true);
-
-			var img = add_item_to_graph(graph, toolbar, vertex, icon);
-			img.enabled = true;
-
-			graph.getSelectionModel().addListener(mxEvent.CHANGE, function() {
-				var tmp = graph.isSelectionEmpty();
-				mxUtils.setOpacity(img, tmp ? 100 : 20);
-				img.enabled = tmp;
-			});
-		};
-
-		create_item(`${editor_path}/images/rectangle.gif`, 100, 40, "");
-		create_item(
-			`${editor_path}/images/ellipse.gif`,
-			100,
-			40,
-			"shape=ellipse"
+		create_toolbar(
+			editor.graph,
+			toolbar_container,
+			`${editor_path}/images`
 		);
 	}
 }
 
-function add_item_to_graph(graph, toolbar, prototype, image) {
-	var _add_item = (graph, evt, cell, x, y) => {
-		graph.stopEditing(false);
+function create_toolbar(graph, toolbar_container, image_dir_path) {
+	add_toolbar_item(
+		graph,
+		toolbar_container,
+		"",
+		`${image_dir_path}/rectangle.gif`
+	);
 
-		var vertex = graph.getModel().cloneCell(prototype);
-		vertex.geometry.x = x;
-		vertex.geometry.y = y;
+	add_toolbar_item(
+		graph,
+		toolbar_container,
+		"shape=ellipse",
+		`${image_dir_path}/ellipse.gif`
+	);
+}
 
-		graph.addCell(vertex);
+function create_editor(editor_config_path, graph_container) {
+	// Create editor with key handler config
+	mxObjectCodec.allowEval = true;
+	var editor_config = mxUtils.load(editor_config_path).getDocumentElement();
+	var editor = new mxEditor(editor_config);
+	mxObjectCodec.allowEval = false;
+	editor.setGraphContainer(graph_container);
+
+	// Enable new connections in the graph
+	editor.graph.setConnectable(true);
+
+	// Enable guides
+	mxGraphHandler.prototype.guidesEnabled = true;
+
+	// Alt disables guides
+	mxGuide.prototype.isEnabledForEvent = evt => {
+		return !mxEvent.isAltDown(evt);
+	};
+
+	// Enables snapping way points to terminals
+	mxEdgeHandler.prototype.snapToTerminals = true;
+
+	// Does not allow dangling edges
+	editor.graph.setAllowDanglingEdges(false);
+
+	return editor;
+}
+
+function add_toolbar_item(graph, sidebar, style, image) {
+	// Function that is executed when the image is dropped on the graph
+	var add_item_to_graph = (graph, evt, cell, x, y) => {
+		var parent = graph.getDefaultParent();
+		var model = graph.getModel();
+		var vertex = null;
+		model.beginUpdate();
+		try {
+			vertex = graph.insertVertex(
+				parent,
+				null,
+				"Test",
+				x,
+				y,
+				120,
+				120,
+				style
+			);
+		} finally {
+			model.endUpdate();
+		}
 		graph.setSelectionCell(vertex);
 	};
 
-	// Create drag preview image
-	var img = toolbar.addMode(null, image, function(evt, cell) {
-		var pt = this.graph.getPointForEvent(evt);
-		_add_item(graph, evt, cell, pt.x, pt.y);
-	});
+	// Create toolbar item image
+	var img = document.createElement("img");
+	img.setAttribute("src", image);
+	img.style.width = "48px";
+	img.style.height = "48px";
+	img.title = "Drag this to the diagram";
+	sidebar.appendChild(img);
 
-	// This listener is always called first before any other listener
-	mxEvent.addListener(img, "mousedown", evt => {
-		if (!img.enabled) mxEvent.consume(evt);
-	});
+	// Shown when dragging item over graph
+	var dragElt = document.createElement("div");
+	dragElt.style.border = "dashed black 1px";
+	dragElt.style.width = "120px";
+	dragElt.style.height = "120px";
 
-	mxUtils.makeDraggable(img, graph, _add_item);
-	return img;
+	// Creates draw preview
+	var drag_preview = mxUtils.makeDraggable(
+		img,
+		graph,
+		add_item_to_graph,
+		dragElt,
+		0,
+		0,
+		true,
+		true
+	);
+	drag_preview.setGuidesEnabled(true);
 }
