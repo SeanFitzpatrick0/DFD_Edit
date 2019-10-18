@@ -15,6 +15,7 @@ function main(editor_path) {
 			toolbar_container,
 			`${editor_path}/images`
 		);
+		set_positions();
 	}
 }
 

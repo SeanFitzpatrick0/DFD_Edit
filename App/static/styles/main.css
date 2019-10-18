@@ -1,0 +1,21 @@
+#editor {
+    background-color: lightgray;
+    height: 90vh;
+    width: 100%;
+    display: inline-flex;
+}
+
+#toolbar {
+    width: 15%;
+    border-bottom: solid black 1px;
+}
+
+#graph {
+    width: 70%;
+    border: solid black 1px;
+}
+
+#hierarchy {
+    width: 15%;
+    border-bottom: solid black 1px;
+}

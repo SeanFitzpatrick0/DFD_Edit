@@ -13,6 +13,13 @@
 			crossorigin="anonymous"
 		/>
 
+		<!-- Custom CSS -->
+		<link
+			rel="stylesheet"
+			type="text/css"
+			href="{{ url_for('static', filename='styles/main.css') }}"
+		/>
+
 		{% if title %}
 		<title>DFD Edit - {{ title }}</title>
 		{% else %}
@@ -20,28 +27,28 @@
 		{% endif %}
 	</head>
 	<body>
-		<header>
-			<div
-				class="navbar navbar-dark bg-dark text-light d-flex justify-content-around"
-			>
-				<!-- Title -->
-				<h5 class="my-0 mr-md-auto font-weight-normal">DFD Edit</h5>
+		<div class="container-full">
+			<header>
+				<div
+					class="navbar navbar-dark bg-dark text-light d-flex justify-content-around"
+				>
+					<!-- Title -->
+					<h5 class="my-0 mr-md-auto font-weight-normal">DFD Edit</h5>
 
-				<!-- Nav links -->
-				<nav class="my-2 my-md-0 mr-md-3">
-					<a class="p-2 text-light" href="{{ url_for('home') }}"
-						>Home</a
-					>
-					<a class="p-2 text-light" href="{{ url_for('editor') }}"
-						>Editor</a
-					>
-					<a class="p-2 text-light" href="#">About</a>
-				</nav>
-				<a class="btn btn-primary m-1" href="#">Login</a>
-				<a class="btn btn-primary m-1" href="#">Register</a>
-			</div>
-		</header>
-		<div class="container-fullwidth">
+					<!-- Nav links -->
+					<nav class="my-2 my-md-0 mr-md-3">
+						<a class="p-2 text-light" href="{{ url_for('home') }}"
+							>Home</a
+						>
+						<a class="p-2 text-light" href="{{ url_for('editor') }}"
+							>Editor</a
+						>
+						<a class="p-2 text-light" href="#">About</a>
+					</nav>
+					<a class="btn btn-primary m-1" href="#">Login</a>
+					<a class="btn btn-primary m-1" href="#">Register</a>
+				</div>
+			</header>
 			{% block content %} {% endblock content %}
 		</div>
 	</body>

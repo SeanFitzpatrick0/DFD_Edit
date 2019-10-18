@@ -1,28 +1,8 @@
 {% extends "_base.html" %} {% block content %}
-<style>
-	#toolbar {
-		position: absolute;
-		overflow: hidden;
-		left: 0px;
-		top: 0px;
-		width: 50px;
-		bottom: 0px;
-		border: solid 1px black;
-	}
-	#graph {
-		position: absolute;
-		overflow: hidden;
-		left: 50px;
-		top: 0px;
-		right: 0px;
-		bottom: 0px;
-		border: solid 1px black;
-	}
-</style>
-
 <div id="editor">
 	<div id="toolbar"></div>
 	<div id="graph"></div>
+	<div id="hierarchy"></div>
 </div>
 
 <!-- Load MxGraph -->
@@ -36,4 +16,5 @@
 <script>
 	main("{{ url_for('static', filename='js/editor') }}");
 </script>
+
 {% endblock content %}
