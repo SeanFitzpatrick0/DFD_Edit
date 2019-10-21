@@ -1,8 +1,26 @@
 {% extends "_base.html" %} {% block content %}
 <div id="editor">
-	<div id="toolbar"></div>
-	<div id="graph"></div>
-	<div id="hierarchy"></div>
+	<div id="toolbar">
+		<div class="mt-3 mb-3 text-center">
+			<h5><span class="badge badge-light">Add to graph</span></h5>
+		</div>
+		<hr />
+		<!-- toolbar injected here -->
+	</div>
+	<div id="graph">
+		<!-- graph injected here -->
+	</div>
+	<div id="hierarchy">
+		<div class="mt-3 mb-3 text-center">
+			<h5><span class="badge badge-light">Diagram hierarchy</span></h5>
+		</div>
+		<hr />
+		<!-- hierarchy injected here -->
+		<ul class="list-group m-2">
+			<li class="list-group-item hierarchy_item active">Graph 1</li>
+			<li class="list-group-item hierarchy_item">Graph 2</li>
+		</ul>
+	</div>
 </div>
 
 <!-- Load MxGraph -->

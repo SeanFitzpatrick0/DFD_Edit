@@ -1,3 +1,62 @@
+// Global variables
+var editor;
+var hierarchy = {};
+
+// Add switch event listeners to all hierarchy_items
+var hierarchy_items = document.getElementsByClassName("hierarchy_item");
+Array.from(hierarchy_items).forEach(hierarchy_item => {
+	hierarchy_item.addEventListener("click", e => {
+		// Break if item is active
+		if (e.target.classList.contains("active")) return;
+
+		let current_item = document.getElementsByClassName("active")[0];
+		let target_item = e.target;
+
+		let current_name = current_item.innerHTML;
+		let target_name = target_item.innerHTML;
+
+		let current_graph = editor.graph;
+		// TODO empty_graph for development (remove later)
+		let empty_graph = new mxGraph().getModel();
+		let target_graph = hierarchy[target_name]
+			? hierarchy[target_name]
+			: empty_graph;
+
+		// Save current graph
+		let save_graph = new mxGraph();
+		save_graph.addCells(
+			current_graph.cloneCells(
+				current_graph.getChildCells(current_graph.getDefaultParent())
+			)
+		);
+		hierarchy[current_name] = save_graph.getModel();
+
+		// Replace graph
+		var parent = current_graph.getDefaultParent();
+		current_graph.getModel().beginUpdate();
+		try {
+			// Removes all cells which are not in the response
+			for (var key in current_graph.getModel().cells) {
+				var tmp = current_graph.getModel().getCell(key);
+
+				if (current_graph.getModel().isVertex(tmp))
+					current_graph.removeCells([tmp]);
+			}
+
+			// Merges the current and target graphs
+			current_graph
+				.getModel()
+				.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
+		} finally {
+			current_graph.getModel().endUpdate();
+		}
+
+		// Swap active class
+		current_item.classList.remove("active");
+		target_item.classList.add("active");
+	});
+});
+
 function main(editor_path) {
 	// Checks if browser is supported
 	if (!mxClient.isBrowserSupported()) {
@@ -6,16 +65,17 @@ function main(editor_path) {
 		// Create Editor
 		let graph_container = document.getElementById("graph");
 		let toolbar_container = document.getElementById("toolbar");
-		var editor = create_editor(
+
+		editor = create_editor(
 			`${editor_path}/config/keyhandler-commons.xml`,
 			graph_container
 		);
+
 		create_toolbar(
 			editor.graph,
 			toolbar_container,
 			`${editor_path}/images`
 		);
-		set_positions();
 	}
 }
 
