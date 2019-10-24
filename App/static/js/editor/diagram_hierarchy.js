@@ -101,10 +101,11 @@ function set_hierarchy_diagram(name, { new_name = null, new_model = null }) {
 	let search_hierarchy = get_hierarchy_diagram(name);
 
 	// Validate new values
-	if (new_name && name.length > 0) search_hierarchy.name = new_name;
-	else throw "Error: New diagram name cant be empty.";
+	if (new_name != null)
+		if (new_name.length > 0) search_hierarchy.name = new_name;
+		else throw "Error: New diagram name cant be empty.";
 
-	if (new_model) search_hierarchy.graph_model = new_model;
+	if (new_model != null) search_hierarchy.graph_model = new_model;
 }
 
 function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
@@ -197,9 +198,9 @@ function switch_graph(event) {
 }
 
 function add_diagram_button_handler() {
-    /**
+	/**
 	 * Add sub-diagram button handler.
-     * Adds new sub-diagram for selected process.
+	 * Adds new sub-diagram for selected process.
 	 */
 
 	// Get item name
