@@ -5,7 +5,20 @@
 			<h5><span class="badge badge-light">Add to graph</span></h5>
 		</div>
 		<hr />
-		<!-- toolbar injected here -->
+		<div id="toolbar_items">
+			<!-- toolbar injected here -->
+		</div>
+		<hr />
+		<div id="item_configurations">
+			<div class="mt-3 mb-3 text-center">
+				<h5><span class="badge badge-light">Item Configurations</span></h5>
+			</div>
+			<hr>
+			<h5 id="item_configurations_title"><h5>
+			<button id="item_configurations_add_sub_diagram" type="button" class="btn btn-primary" onclick="add_diagram_button_handler()">
+				Add Sub-Diagram
+			</button>
+		</div>
 	</div>
 	<div id="graph">
 		<!-- graph injected here -->
@@ -15,22 +28,25 @@
 			<h5><span class="badge badge-light">Diagram hierarchy</span></h5>
 		</div>
 		<hr />
-		<!-- hierarchy injected here -->
-		<ul class="list-group m-2">
-			<li class="list-group-item hierarchy_item active">Graph 1</li>
-			<li class="list-group-item hierarchy_item">Graph 2</li>
+		<ul id="hierarchy_list" class="list-group m-2">
+			<!-- hierarchy injected here -->
 		</ul>
 	</div>
 </div>
 
-<!-- Load MxGraph -->
+<!-- Load MxGraph Library -->
 <script>
 	mxBasePath =
 		"{{ url_for('static', filename='mxgraph-master/javascript/src') }}";
 </script>
 <script src="{{ url_for('static', filename='mxgraph-master/javascript/src/js/mxClient.js') }}"></script>
-<!-- Create Editor -->
+
+<!-- Diagram Hierarchy -->
+<script src="{{ url_for('static', filename='js/editor/diagram_hierarchy.js') }}"></script>
+<!-- Editor -->
 <script src="{{ url_for('static', filename='js/editor/editor.js') }}"></script>
+
+<!-- Create Editor -->
 <script>
 	main("{{ url_for('static', filename='js/editor') }}");
 </script>

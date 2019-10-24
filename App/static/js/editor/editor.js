@@ -2,69 +2,20 @@
 var editor;
 var hierarchy = {};
 
-// Add switch event listeners to all hierarchy_items
-var hierarchy_items = document.getElementsByClassName("hierarchy_item");
-Array.from(hierarchy_items).forEach(hierarchy_item => {
-	hierarchy_item.addEventListener("click", e => {
-		// Break if item is active
-		if (e.target.classList.contains("active")) return;
-
-		let current_item = document.getElementsByClassName("active")[0];
-		let target_item = e.target;
-
-		let current_name = current_item.innerHTML;
-		let target_name = target_item.innerHTML;
-
-		let current_graph = editor.graph;
-		// TODO empty_graph for development (remove later)
-		let empty_graph = new mxGraph().getModel();
-		let target_graph = hierarchy[target_name]
-			? hierarchy[target_name]
-			: empty_graph;
-
-		// Save current graph
-		let save_graph = new mxGraph();
-		save_graph.addCells(
-			current_graph.cloneCells(
-				current_graph.getChildCells(current_graph.getDefaultParent())
-			)
-		);
-		hierarchy[current_name] = save_graph.getModel();
-
-		// Replace graph
-		var parent = current_graph.getDefaultParent();
-		current_graph.getModel().beginUpdate();
-		try {
-			// Removes all cells which are not in the response
-			for (var key in current_graph.getModel().cells) {
-				var tmp = current_graph.getModel().getCell(key);
-
-				if (current_graph.getModel().isVertex(tmp))
-					current_graph.removeCells([tmp]);
-			}
-
-			// Merges the current and target graphs
-			current_graph
-				.getModel()
-				.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
-		} finally {
-			current_graph.getModel().endUpdate();
-		}
-
-		// Swap active class
-		current_item.classList.remove("active");
-		target_item.classList.add("active");
-	});
-});
-
 function main(editor_path) {
+	/**
+	 * Initializes editor. Creates editor, toolbar and diagram hierarchy.
+	 * Displays error message if browser is not supported.
+	 * @param  {String} editor_path Path to editor directory.
+	 */
+
 	// Checks if browser is supported
 	if (!mxClient.isBrowserSupported()) {
 		mxUtils.error("This browser is not supported.", 200, false);
 	} else {
 		// Create Editor
 		let graph_container = document.getElementById("graph");
-		let toolbar_container = document.getElementById("toolbar");
+		let toolbar_container = document.getElementById("toolbar_items");
 
 		editor = create_editor(
 			`${editor_path}/config/keyhandler-commons.xml`,
@@ -76,26 +27,24 @@ function main(editor_path) {
 			toolbar_container,
 			`${editor_path}/images`
 		);
+
+		create_hierarchy();
+
+		// Add cell select event listener
+		editor.graph
+			.getSelectionModel()
+			.addListener(mxEvent.CHANGE, graph_select);
 	}
 }
 
-function create_toolbar(graph, toolbar_container, image_dir_path) {
-	add_toolbar_item(
-		graph,
-		toolbar_container,
-		"",
-		`${image_dir_path}/rectangle.gif`
-	);
-
-	add_toolbar_item(
-		graph,
-		toolbar_container,
-		"shape=ellipse",
-		`${image_dir_path}/ellipse.gif`
-	);
-}
-
 function create_editor(editor_config_path, graph_container) {
+	/**
+	 * Creates editor and initializes configurations.
+	 * @param  {String} editor_config_path Path to key handler configurations file.
+	 * @param  {Object} graph_container HTML element of the graph container.
+	 * @returns {Object} The created editor.
+	 */
+
 	// Create editor with key handler config
 	mxObjectCodec.allowEval = true;
 	var editor_config = mxUtils.load(editor_config_path).getDocumentElement();
@@ -123,54 +72,125 @@ function create_editor(editor_config_path, graph_container) {
 	return editor;
 }
 
-function add_toolbar_item(graph, sidebar, style, image) {
-	// Function that is executed when the image is dropped on the graph
-	var add_item_to_graph = (graph, evt, cell, x, y) => {
-		var parent = graph.getDefaultParent();
-		var model = graph.getModel();
-		var vertex = null;
+function create_toolbar(graph, toolbar_container, image_dir_path) {
+	/**
+	 * Adds all elements to toolbar.
+	 * @param  {Object} graph Editor graph.
+	 * @param  {Object} toolbar_container HTML element of the toolbar container.
+	 * @param  {String} image_dir_path Path to the editor image directory.
+	 */
+
+	// Add entity element
+	add_toolbar_item(
+		graph,
+		toolbar_container,
+		"",
+		`${image_dir_path}/rectangle.gif`
+	);
+
+	// Add process element
+	add_toolbar_item(
+		graph,
+		toolbar_container,
+		"shape=ellipse",
+		`${image_dir_path}/ellipse.gif`
+	);
+}
+
+function add_toolbar_item(graph, toolbar, style, image) {
+	/**
+	 * Adds icon to toolbar and adds drag event handler for item
+	 * @param  {Object} graph Editor graph.
+	 * @param  {Object} toolbar HTML element of the toolbar container.
+	 * @param  {String} style Style of the graph element.
+	 * @param  {String} image Path to the image that will be added to the toolbar.
+	 */
+
+	// Create toolbar item image and add to toolbar
+	let img = document.createElement("img");
+	img.setAttribute("src", image);
+	img.style.width = "48px";
+	img.style.height = "48px";
+	img.title = "Drag this to the diagram";
+	toolbar.appendChild(img);
+
+	// Create drag event handler for item
+	/* Function that is executed when the image is dropped on the graph */
+	let add_item_to_graph = (graph, evt, cell, x, y) => {
+		let parent = graph.getDefaultParent();
+		let model = graph.getModel();
+		let vertex = null;
+		let vertex_id = null; // Assigns unique id if null
+		let vertex_name = "Test";
+		let width = 120;
+		let height = 120;
+
+		// Preform update
 		model.beginUpdate();
 		try {
 			vertex = graph.insertVertex(
 				parent,
-				null,
-				"Test",
+				vertex_id,
+				vertex_name,
 				x,
 				y,
-				120,
-				120,
+				width,
+				height,
 				style
 			);
 		} finally {
 			model.endUpdate();
 		}
+
+		// Select added vertex
 		graph.setSelectionCell(vertex);
 	};
 
-	// Create toolbar item image
-	var img = document.createElement("img");
-	img.setAttribute("src", image);
-	img.style.width = "48px";
-	img.style.height = "48px";
-	img.title = "Drag this to the diagram";
-	sidebar.appendChild(img);
+	/* Preview shown when dragging item over graph */
+	let drag_element = document.createElement("div");
+	drag_element.style.border = "dashed black 1px";
+	drag_element.style.width = "120px";
+	drag_element.style.height = "120px";
+	let drag_offset; // Offset away from mouse when dragged
 
-	// Shown when dragging item over graph
-	var dragElt = document.createElement("div");
-	dragElt.style.border = "dashed black 1px";
-	dragElt.style.width = "120px";
-	dragElt.style.height = "120px";
-
-	// Creates draw preview
-	var drag_preview = mxUtils.makeDraggable(
+	/* Add drag event handler */
+	let drag_preview = mxUtils.makeDraggable(
 		img,
 		graph,
 		add_item_to_graph,
-		dragElt,
-		0,
-		0,
-		true,
-		true
+		drag_element,
+		drag_offset,
+		drag_offset
 	);
 	drag_preview.setGuidesEnabled(true);
+}
+
+function graph_select(sender, event) {
+	/**
+	 * Cell selection event handler.
+	 * @param  {Object} sender Sender of the event
+	 * @param  {Object} event Details about event
+	 */
+
+	// Get selected cells
+	var cells = event.getProperty("removed");
+
+	if (cells && cells.length == 1) {
+		// Single cell selected
+		let cell = cells[0];
+
+		// Display item configurations
+		/* Add item title */
+		let item_title = document.getElementById("item_configurations_title");
+		item_title.innerHTML = cell.value;
+		/* Show menu */
+		let item_configuration = document.getElementById("item_configurations");
+		item_configuration.style.display = "block";
+	} else {
+		// No or multiple cells selected
+		// Hide configuration menu
+		document.getElementById("item_configurations").style.display = "none";
+	}
+
+	event.consume();
 }
