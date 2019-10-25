@@ -21,6 +21,16 @@
     border-bottom: solid black 1px;
 }
 
+.list-group-item {
+    padding-right: 0;
+    padding-bottom: 0;
+}
+
+.diagram_active {
+    background-color: #007BFF;
+    color: #343A40;
+}
+
 #item_configurations {
     display: none;
 }

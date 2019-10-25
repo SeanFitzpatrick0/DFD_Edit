@@ -10,7 +10,7 @@ function create_hierarchy() {
 	// Set starting diagram as active
 	document
 		.getElementById("Contextual_diagram_hierarchy_item")
-		.classList.add("active");
+		.classList.add("diagram_active");
 }
 
 function add_to_hierarchy(name, parent_name) {
@@ -120,12 +120,13 @@ function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
 	if (name == sub_hierarchy.name) return sub_hierarchy;
 
 	// Search each child
-	let found_hierarchy = sub_hierarchy.children.reduce((found, child) => {
-		if (child.name == name) found = child;
-		return found;
-	}, null);
+	let search_result = null;
+	sub_hierarchy.children.forEach(child => {
+		let search = _get_hierarchy_diagram_helper(child, name);
+		if(search != null) search_result = search;
+	});
 
-	return found_hierarchy;
+	return search_result;
 }
 
 function switch_graph(event) {
@@ -143,10 +144,10 @@ function switch_graph(event) {
 	/* get list item if title clicked */
 	if (target_hierarchy_item.classList.contains("hierarchy_item_title"))
 		target_hierarchy_item = target_hierarchy_item.parentElement;
-	let current_hierarchy_item = document.getElementsByClassName("active")[0];
+	let current_hierarchy_item = document.getElementsByClassName("diagram_active")[0];
 
 	// Break if target item is already active
-	if (target_hierarchy_item.classList.contains("active")) return;
+	if (target_hierarchy_item.classList.contains("diagram_active")) return;
 
 	// Get active and target items names
 	let current_graph_name = current_hierarchy_item.getElementsByClassName(
@@ -193,8 +194,8 @@ function switch_graph(event) {
 	}
 
 	// Swap active class
-	current_hierarchy_item.classList.remove("active");
-	target_hierarchy_item.classList.add("active");
+	current_hierarchy_item.classList.remove("diagram_active");
+	target_hierarchy_item.classList.add("diagram_active");
 }
 
 function add_diagram_button_handler() {
@@ -208,7 +209,7 @@ function add_diagram_button_handler() {
 		.innerText;
 	// Get parent name
 	let parent_name = document
-		.getElementsByClassName("active")[0]
+		.getElementsByClassName("diagram_active")[0]
 		.getElementsByClassName("hierarchy_item_title")[0].innerText;
 	// Add to hierarchy
 	add_to_hierarchy(item_name, parent_name);
