@@ -5,9 +5,12 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+autopep8 = "*"
 
 [packages]
 flask = "*"
+flask-bcrypt = "*"
+flask-wtf = "*"
 
 [requires]
 python_version = "3.6"
