@@ -191,6 +191,7 @@ function switch_graph(event) {
 			.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
 	} finally {
 		current_graph.getModel().endUpdate();
+		current_graph.refresh();
 	}
 
 	// Swap active class
