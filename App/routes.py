@@ -1,5 +1,5 @@
-from flask import render_template, url_for, flash, redirect
-from flask_login import login_user, logout_user, current_user
+from flask import render_template, url_for, flash, redirect, request
+from flask_login import login_user, logout_user, current_user, login_required
 from App.forms import RegistrationForm, LoginForm
 from App.models import User
 from App import app, bcrypt, db
@@ -50,8 +50,12 @@ def login():
             # Login User
             login_user(user, remember=form.remember.data)
 
+            # Get next page
+            next_page = request.args.get('next')
+            next_page = next_page if next_page else url_for('home')
+
             flash('{} logged in'.format(user.username), 'success')
-            return redirect(url_for('home'))
+            return redirect(next_page)
         else:
             flash('No user exists with this email and password', 'danger')
     return render_template('login.html', title='Log in', form=form)
@@ -63,3 +67,9 @@ def logout():
         flash('{} logged out'.format(current_user.username), 'info')
         logout_user()
     return redirect(url_for('home'))
+
+
+@app.route('/account')
+@login_required
+def account():
+    return render_template('account.html')
