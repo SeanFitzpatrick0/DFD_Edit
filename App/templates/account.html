@@ -1,8 +1,50 @@
 {% extends "_base.html" %} {% block content %}
-<h1>{{ current_user.username }}</h1>
-<p>{{ current_user.email }}</p>
 
-<h3>Your diagrams</h3>
+<!-- Use details -->
+<div class="row justify-content-center">
+	<div class="col-6">
+		<div class="card pl-4 m-4">
+			<div>
+				<h2>{{ current_user.username }}</h2>
 
-<h3>Invited to edit</h3>
+				<p>
+					<span class="badge badge-secondary">Email</span>
+					{{ current_user.email }}
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Diagrams list -->
+<div class="row justify-content-around">
+	<!-- Authored diagrams -->
+	<div class="col-5">
+		<div class="card">
+			<div class="card-header">
+				<h5>Your diagrams</h5>
+			</div>
+			<div class="card-body">
+				<p class="card-text">
+					...
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Invited diagrams -->
+	<div class="col-5">
+		<div class="card">
+			<div class="card-header">
+				<h5>Invited to edit</h5>
+			</div>
+			<div class="card-body">
+				<p class="card-text">
+					...
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
 {% endblock content %}
