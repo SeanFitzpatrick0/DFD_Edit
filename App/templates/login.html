@@ -4,7 +4,7 @@
 		<form method="POST" action="">
 			{{ form.hidden_tag() }}
 			<fieldset class="form-group">
-				<legend class='pt-4'><h4>Log in</h4></legend>
+				<legend class="pt-4"><h4>Log in</h4></legend>
 				<hr />
 
 				<!-- Email input -->
@@ -37,6 +37,12 @@
 					{% endif %}
 				</div>
 			</fieldset>
+
+			<!-- Remember me checkbox -->
+			<div class="form-check">
+				{{ form.remember(class="form-check-input") }}
+				{{ form.remember.label(class="form-check-label") }}
+			</div>
 
 			<!-- Submit -->
 			<div class="form-group">
