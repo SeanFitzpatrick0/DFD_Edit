@@ -1,4 +1,5 @@
-{% extends "_base.html" %} {% block content %}
+{% from "_diagram_list.html" import diagram_list with context %} {% extends
+"_base.html" %} {% block content %}
 
 <!-- Use details -->
 <div class="row justify-content-center">
@@ -20,30 +21,12 @@
 <div class="row justify-content-around">
 	<!-- Authored diagrams -->
 	<div class="col-5">
-		<div class="card">
-			<div class="card-header">
-				<h5>Your diagrams</h5>
-			</div>
-			<div class="card-body">
-				<p class="card-text">
-					...
-				</p>
-			</div>
-		</div>
+		{{ diagram_list("Your Diagrams", current_user, created_diagrams) }}
 	</div>
 
 	<!-- Invited diagrams -->
 	<div class="col-5">
-		<div class="card">
-			<div class="card-header">
-				<h5>Invited to edit</h5>
-			</div>
-			<div class="card-body">
-				<p class="card-text">
-					...
-				</p>
-			</div>
-		</div>
+		{{ diagram_list("Invited Diagrams", current_user, invited_diagrams) }}
 	</div>
 </div>
 

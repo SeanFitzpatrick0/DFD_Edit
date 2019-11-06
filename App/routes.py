@@ -1,7 +1,8 @@
 from flask import render_template, url_for, flash, redirect, request
 from flask_login import login_user, logout_user, current_user, login_required
 from App.forms import RegistrationForm, LoginForm
-from App.models import User
+from App.models import User, DataFlowDiagram
+from App.utils import get_diagram_editors, get_user_created_diagrams, get_user_invited_diagrams
 from App import app, bcrypt, db
 
 
@@ -72,4 +73,8 @@ def logout():
 @app.route('/account')
 @login_required
 def account():
-    return render_template('account.html')
+    created_diagrams = get_user_created_diagrams(current_user)
+    invited_diagrams = get_user_invited_diagrams(current_user)
+    return render_template('account.html',
+                           created_diagrams=created_diagrams, invited_diagrams=invited_diagrams,
+                           get_diagram_editors=get_diagram_editors)

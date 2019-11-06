@@ -1,0 +1,41 @@
+{% macro diagram_list(title, user, diagrams) %}
+
+<div class="card">
+	<div class="card-header">
+		<h5>{{ title }}</h5>
+	</div>
+	{% if diagrams[0] is defined %}
+	<ul class="list-group list-group-flush">
+		{% for diagram in diagrams %}
+		<li class="list-group-item p-3">
+			<!-- Diagram Title -->
+			<h5>{{ diagram.title }}</h5>
+			<hr />
+
+			<!-- Diagram actions -->
+			<div class="row justify-content-around">
+				<a href="#" class="btn btn-sm btn-info">Edit Diagram</a>
+				<a href="#" class="btn btn-sm btn-primary">
+					{% if user.id == diagram.author %} Manage Editors {% else %}
+					View Editors {% endif %}
+					<span class="badge badge-light">{{
+						get_diagram_editors(diagram) | length
+					}}</span></a
+				>
+				<a href="#" class="btn btn-sm btn-danger">Delete Diagram</a>
+			</div>
+		</li>
+		{% endfor %}
+	</ul>
+	{% else %}
+	<div class="row justify-content-center p-4">
+		<h4>
+			<span class="badge badge-secondary"
+				>You have created no diagrams</span
+			>
+		</h4>
+	</div>
+	{% endif %}
+</div>
+
+{% endmacro %}
