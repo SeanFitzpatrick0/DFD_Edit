@@ -1,4 +1,4 @@
-from App.models import User, DataFlowDiagram, Invitation
+from App.models import User, DataFlowDiagram, Invitation, Edit
 
 
 def get_user_created_diagrams(user):
@@ -18,3 +18,13 @@ def get_diagram_editors(diagram):
     editors = [User.query.get(invitation.invited_user)
                for invitation in diagram_invitations]
     return editors
+
+
+def get_diagram_edits(diagram):
+    diagram_edits = Edit.query.filter_by(
+        edited_diagram=diagram.id).order_by(Edit.edited_on.desc())
+    return diagram_edits
+
+
+def get_user(id):
+    return User.query.get(id)

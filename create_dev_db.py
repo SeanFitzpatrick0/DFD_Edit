@@ -25,10 +25,12 @@ xml_literal = ''  # TODO replace with real exported xml
 leaf_graph_1 = Graph(title='Leaf Graph 1', level=1, xml_model=xml_literal)
 leaf_graph_2 = Graph(title='Leaf Graph 2', level=1, xml_model=xml_literal)
 root_graph = Graph(title='Root Graph', level=0, xml_model=xml_literal)
+root_graph2 = Graph(title='Root Graph 2', level=0, xml_model=xml_literal)
 
 db.session.add(leaf_graph_1)
 db.session.add(leaf_graph_2)
 db.session.add(root_graph)
+db.session.add(root_graph2)
 db.session.commit()
 
 # Connect graphs
@@ -40,21 +42,32 @@ db.session.add(child2)
 db.session.commit()
 
 # Create demo DFD
-dfd = DataFlowDiagram(title='Demo DFD', graph=root_graph.id, author=user_1.id)
+dfd1 = DataFlowDiagram(
+    title='Demo DFD1', graph=root_graph.id, author=user_1.id)
+dfd2 = DataFlowDiagram(
+    title='Demo DFD2', graph=root_graph2.id, author=user_1.id)
 
-db.session.add(dfd)
+db.session.add(dfd1)
+db.session.add(dfd2)
 db.session.commit()
 
 # Invite a user
-invite = Invitation(invited_user=user_2.id, invited_to=dfd.id)
+invite = Invitation(invited_user=user_2.id, invited_to=dfd1.id)
 
 db.session.add(invite)
 db.session.commit()
 
 # Edit diagram
-Graph.query.get(dfd.graph).xml_model = 'Edit'
-edit = Edit(editor=user_2.id, edited_diagram=dfd.id,
+Graph.query.get(dfd1.graph).xml_model = 'Edit'
+edit = Edit(editor=user_2.id, edited_diagram=dfd1.id,
             message='Edited context diagram')
+
+db.session.add(edit)
+db.session.commit()
+
+Graph.query.get(dfd1.graph).xml_model = 'Edit2'
+edit = Edit(editor=user_2.id, edited_diagram=dfd1.id,
+            message='Edited context diagram again')
 
 db.session.add(edit)
 db.session.commit()

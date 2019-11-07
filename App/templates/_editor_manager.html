@@ -1,0 +1,110 @@
+{% macro editor_manager(diagram, index) %}
+
+<!-- Modal -->
+<div class="modal fade" id="editor_manager_{{ index }}" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<!-- Title -->
+			<div class="modal-header">
+				<h5 class="modal-title">
+					{{ diagram.title }}
+				</h5>
+				<button
+					type="button"
+					class="close"
+					data-dismiss="modal"
+					aria-label="Close"
+				>
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<div class="modal-body">
+				<!-- Author -->
+				<div class="card">
+					<div class="card-header">
+						Creator
+					</div>
+					<div class="card-body">
+						<h3>{{ get_user(diagram.author).username }}</h3>
+						<p>
+							<span class="badge badge-secondary">Email</span>
+							{{ get_user(diagram.author).email }}
+						</p>
+					</div>
+				</div>
+				<hr />
+
+				<!-- Editors -->
+				<div class="card">
+					<div class="card-header">
+						Invited Editors
+					</div>
+
+					<!-- Editors list -->
+					<ul class="list-group list-group-flush">
+						{% if get_diagram_editors(diagram)[0] is defined %} {%
+						for editor in get_diagram_editors(diagram) %}
+						<li class="list-group-item pb-1">
+							<h6>{{ editor.username }}</h6>
+							<p>
+								<span class="badge badge-secondary">Email</span>
+								{{ editor.email }}
+							</p>
+						</li>
+						{% endfor %} {% else %}
+						<!-- No editors -->
+						<div class="row justify-content-center p-4">
+							<h4>
+								<span class="badge badge-secondary"
+									>No editors invited</span
+								>
+							</h4>
+						</div>
+						{% endif %}
+					</ul>
+
+					<!-- TODO add invited editor inputs and deleted editors -->
+				</div>
+				<hr />
+
+				<!-- Edit Log -->
+				<div class="card bg-info">
+					<div class="card-header text-white">
+						Edit Log
+					</div>
+
+					<!-- Edits List -->
+					<ul class="list-group list-group-flush">
+						{% if get_diagram_edits(diagram)[0] is defined %} {% for
+						edit in get_diagram_edits(diagram) %}
+						<li class="list-group-item pb-1">
+							<!-- User & Message -->
+							<div>
+								<b>{{ get_user(edit.editor).username }}:</b>
+								{{ edit.message }}
+							</div>
+							<!-- Date -->
+							<div class="float-right pr-2">
+								<span class="badge badge-secondary">{{
+									edit.edited_on.strftime("%Y/%m/%d, %H: %M")
+								}}</span>
+							</div>
+						</li>
+						{% endfor %} {% else %}
+						<!-- No Edits -->
+						<div class="row justify-content-center p-4">
+							<h4>
+								<span class="badge badge-info">No edits</span>
+							</h4>
+						</div>
+						{% endif %}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endmacro %}

@@ -1,9 +1,13 @@
+{% from "_editor_manager.html" import editor_manager with context %}
 {% macro diagram_list(title, user, diagrams) %}
 
 <div class="card">
+	<!-- List Title -->
 	<div class="card-header">
 		<h5>{{ title }}</h5>
 	</div>
+
+	<!-- List Items -->
 	{% if diagrams[0] is defined %}
 	<ul class="list-group list-group-flush">
 		{% for diagram in diagrams %}
@@ -14,24 +18,43 @@
 
 			<!-- Diagram actions -->
 			<div class="row justify-content-around">
+				<!-- TODO load diagram in click -->
+				<!-- Load Diagram -->
 				<a href="#" class="btn btn-sm btn-info">Edit Diagram</a>
-				<a href="#" class="btn btn-sm btn-primary">
+
+				<!-- Manage editors -->
+				<button
+					type="button"
+					class="btn btn-sm btn-primary"
+					data-toggle="modal"
+					data-target="#editor_manager_{{ loop.index }}"
+				>
 					{% if user.id == diagram.author %} Manage Editors {% else %}
 					View Editors {% endif %}
 					<span class="badge badge-light">{{
-						get_diagram_editors(diagram) | length
-					}}</span></a
-				>
+						get_diagram_editors(diagram) | length + 1
+					}}</span>
+				</button>
+
+				<!-- Delete Diagram -->
+				{% if user.id == diagram.author %}
 				<a href="#" class="btn btn-sm btn-danger">Delete Diagram</a>
+				{% endif %}
 			</div>
 		</li>
+
+		<!-- Editor Manager Modal -->
+		{{ editor_manager(diagram, loop.index) }}
+ 
 		{% endfor %}
 	</ul>
+
+	<!-- No items list -->
 	{% else %}
 	<div class="row justify-content-center p-4">
 		<h4>
 			<span class="badge badge-secondary"
-				>You have created no diagrams</span
+				>No diagrams</span
 			>
 		</h4>
 	</div>
