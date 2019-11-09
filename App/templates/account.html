@@ -1,6 +1,9 @@
 {% from "_diagram_list.html" import diagram_list with context %} {% extends
 "_base.html" %} {% block content %}
 
+<!-- Account JS -->
+<script src="{{ url_for('static', filename='js/account.js') }}" defer></script>
+
 <!-- Use details -->
 <div class="row justify-content-center">
 	<div class="col-6">

@@ -1,5 +1,5 @@
-{% from "_editor_manager.html" import editor_manager with context %}
-{% macro diagram_list(title, user, diagrams) %}
+{% from "_editor_manager.html" import editor_manager with context %} {% macro
+diagram_list(title, user, diagrams) %}
 
 <div class="card">
 	<!-- List Title -->
@@ -10,7 +10,9 @@
 	<!-- List Items -->
 	{% if diagrams[0] is defined %}
 	<ul class="list-group list-group-flush">
-		{% for diagram in diagrams %}
+		{% for diagram in diagrams %} {% set user_created_diagram = user.id ==
+		diagram.author %}
+
 		<li class="list-group-item p-3">
 			<!-- Diagram Title -->
 			<h5>{{ diagram.title }}</h5>
@@ -29,23 +31,25 @@
 					data-toggle="modal"
 					data-target="#editor_manager_{{ loop.index }}"
 				>
-					{% if user.id == diagram.author %} Manage Editors {% else %}
-					View Editors {% endif %}
+					{% if user_created_diagram %} Manage Editors {% else %} View
+					Editors {% endif %}
 					<span class="badge badge-light">{{
 						get_diagram_editors(diagram) | length + 1
 					}}</span>
 				</button>
 
 				<!-- Delete Diagram -->
-				{% if user.id == diagram.author %}
+				{% if user_created_diagram %}
 				<a href="#" class="btn btn-sm btn-danger">Delete Diagram</a>
 				{% endif %}
 			</div>
 		</li>
 
 		<!-- Editor Manager Modal -->
-		{{ editor_manager(diagram, loop.index) }}
- 
+		{{
+			editor_manager(diagram, loop.index, user_created_diagram)
+		}}
+
 		{% endfor %}
 	</ul>
 
@@ -53,9 +57,7 @@
 	{% else %}
 	<div class="row justify-content-center p-4">
 		<h4>
-			<span class="badge badge-secondary"
-				>No diagrams</span
-			>
+			<span class="badge badge-secondary">No diagrams</span>
 		</h4>
 	</div>
 	{% endif %}

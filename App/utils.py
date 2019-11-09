@@ -26,5 +26,15 @@ def get_diagram_edits(diagram):
     return diagram_edits
 
 
+def get_diagram_author(id):
+    diagram = DataFlowDiagram.query.get(id)
+    author = get_user(diagram.author)
+    return author
+
+
 def get_user(id):
     return User.query.get(id)
+
+
+def get_diagram(id):
+    return DataFlowDiagram.query.get(id)

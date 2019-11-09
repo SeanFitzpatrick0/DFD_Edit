@@ -1,9 +1,10 @@
-from flask import render_template, url_for, flash, redirect, request
+from flask import render_template, url_for, flash, redirect, request, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from App.forms import RegistrationForm, LoginForm
-from App.models import User, DataFlowDiagram
+from App.models import User, DataFlowDiagram, Invitation
 from App.utils import (get_diagram_editors, get_user_created_diagrams,
-                       get_user_invited_diagrams, get_diagram_edits, get_user)
+                       get_user_invited_diagrams, get_diagram_edits,
+                       get_user, get_diagram_author, get_diagram)
 from App import app, bcrypt, db
 
 
@@ -81,3 +82,19 @@ def account():
                            created_diagrams=created_diagrams, invited_diagrams=invited_diagrams,
                            get_diagram_editors=get_diagram_editors, get_diagram_edits=get_diagram_edits,
                            get_user=get_user)
+
+
+@app.route('/invite/<user_id>_<diagram_id>', methods=['POST'])
+@login_required
+def delete_invited(user_id, diagram_id):
+    author = get_diagram_author(diagram_id)
+    if current_user.id != author.id:
+        abort(403)
+
+    invitation = Invitation.query.get_or_404((user_id, diagram_id))
+    db.session.delete(invitation)
+    db.session.commit()
+
+    flash('{} has been removed from {}.'.format(
+        get_user(user_id).username, get_diagram(diagram_id).title), 'info')
+    return redirect(url_for('account'))

@@ -1,4 +1,4 @@
-{% macro editor_manager(diagram, index) %}
+{% macro editor_manager(diagram, index, user_created_diagram) %}
 
 <!-- Modal -->
 <div class="modal fade" id="editor_manager_{{ index }}" role="dialog">
@@ -47,11 +47,40 @@
 						{% if get_diagram_editors(diagram)[0] is defined %} {%
 						for editor in get_diagram_editors(diagram) %}
 						<li class="list-group-item pb-1">
+							<!-- Editor username -->
 							<h6>{{ editor.username }}</h6>
-							<p>
-								<span class="badge badge-secondary">Email</span>
-								{{ editor.email }}
-							</p>
+
+							<div class="row">
+								<!-- Editor email -->
+								<div class="col-9">
+									<p>
+										<span class="badge badge-secondary"
+											>Email</span
+										>
+										{{ editor.email }}
+									</p>
+								</div>
+
+								<!-- Remove editor button -->
+								{% if user_created_diagram %}
+								<div class="col-3">
+									<form
+										onsubmit="return confirm_remove_editor(
+											'{{ editor.username }}',
+											'{{ diagram.title }}'
+										)"
+										action="{{ url_for('delete_invited', user_id=editor.id, diagram_id=diagram.id) }}"
+										method="POST"
+									>
+										<input
+											class="btn  btn-sm btn-danger"
+											type="submit"
+											value="Remove"
+										/>
+									</form>
+								</div>
+								{% endif %}
+							</div>
 						</li>
 						{% endfor %} {% else %}
 						<!-- No editors -->
