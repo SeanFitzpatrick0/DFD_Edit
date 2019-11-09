@@ -69,7 +69,7 @@
 											'{{ editor.username }}',
 											'{{ diagram.title }}'
 										)"
-										action="{{ url_for('delete_invited', user_id=editor.id, diagram_id=diagram.id) }}"
+										action="{{ url_for('delete_invited_editor', user_id=editor.id, diagram_id=diagram.id) }}"
 										method="POST"
 									>
 										<input
@@ -93,9 +93,34 @@
 						</div>
 						{% endif %}
 					</ul>
-
-					<!-- TODO add invited editor inputs and deleted editors -->
 				</div>
+
+				<!-- Invite Editor Form -->
+				{% if user_created_diagram %}
+				<form
+					class="card mt-2"
+					method="POST"
+					action="{{ url_for('invite_editor', diagram_id=diagram.id) }}"
+				>
+					{{ invite_editor_form.hidden_tag() }}
+					<fieldset class="form-group">
+						<legend class="pt-2 pl-2">
+							<h5>Invite Editor</h5>
+						</legend>
+					</fieldset>
+
+					<!-- Email input -->
+					<div class="form-group p-2">
+						<!-- Input -->
+						<div class="input-group">
+							{{ invite_editor_form.email(type='text', class="form-control", placeholder="Enter editor's email ...") }}
+							<span class="input-group-btn">
+								{{ invite_editor_form.submit(class="btn btn-outline-primary") }}
+							</span>
+						</div>
+					</div>
+				</form>
+				{% endif %}
 				<hr />
 
 				<!-- Edit Log -->
