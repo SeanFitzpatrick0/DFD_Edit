@@ -1,4 +1,5 @@
-from App.models import User, DataFlowDiagram, Invitation, Edit
+from App.models import User, DataFlowDiagram, Invitation, Edit, Graph, GraphChildren
+from App import db
 
 
 def get_user_created_diagrams(user):
@@ -42,3 +43,46 @@ def get_user(id):
 
 def get_diagram(id):
     return DataFlowDiagram.query.get(id)
+
+
+def get_graph(id):
+    return Graph.query.get(id)
+
+
+def get_graph_children(parent_graph):
+    return GraphChildren.query.filter_by(parent=parent_graph.id)
+
+
+def delete_diagram_by_id(id):
+    diagram = get_diagram(id)
+
+    # Remove diagram edits
+    Edit.query.filter_by(edited_diagram=id).delete()
+
+    # Remove diagram invitations
+    Invitation.query.filter_by(invited_to=id).delete()
+
+    # Remove graphs
+    delete_graph_and_children(diagram.graph)
+
+    # Remove diagram
+    db.session.delete(diagram)
+
+    # commit delete
+    db.session.commit()
+
+
+def delete_graph_and_children(id):
+    graph = get_graph(id)
+    children = get_graph_children(graph)
+
+    # Remove children graphs
+    for child in children:
+        delete_graph_and_children(child.child)
+
+    # Remove association table entries
+    children.delete()
+
+    # Remove graph
+    db.session.delete(graph)
+    db.session.commit()

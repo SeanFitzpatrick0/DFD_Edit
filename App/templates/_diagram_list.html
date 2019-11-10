@@ -40,7 +40,17 @@ diagram_list(title, user, diagrams) %}
 
 				<!-- Delete Diagram -->
 				{% if user_created_diagram %}
-				<a href="#" class="btn btn-sm btn-danger">Delete Diagram</a>
+				<form
+					onsubmit="return confirm_delete_diagram('{{ diagram.title }}')"
+					action="{{ url_for('delete_diagram', id=diagram.id) }}"
+					method="POST"
+				>
+					<input
+						class="btn  btn-sm btn-danger"
+						type="submit"
+						value="Delete Diagram"
+					/>
+				</form>
 				{% endif %}
 			</div>
 		</li>

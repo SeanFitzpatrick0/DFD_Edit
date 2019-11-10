@@ -5,7 +5,7 @@ from App.models import User, DataFlowDiagram, Invitation
 from App.utils import (get_diagram_editors, get_user_created_diagrams,
                        get_user_invited_diagrams, get_diagram_edits,
                        get_user, get_diagram_author, get_diagram,
-                       get_user_by_email)
+                       get_user_by_email, delete_diagram_by_id)
 from App import app, bcrypt, db
 
 
@@ -119,7 +119,8 @@ def invite_editor(diagram_id):
             flash('Unable to add youself as an editor.', 'danger')
 
         else:
-            invite = Invitation(invited_user=invited_user.id, invited_to=diagram_id)
+            invite = Invitation(invited_user=invited_user.id,
+                                invited_to=diagram_id)
             db.session.add(invite)
             db.session.commit()
 
@@ -129,4 +130,15 @@ def invite_editor(diagram_id):
         flash('No user registered with email {}.'.format(
             invite_editor_form.email.data), 'danger')
 
+    return redirect(url_for('account'))
+
+
+@app.route('/diagram/<id>/delete', methods=['POST'])
+@login_required
+def delete_diagram(id):
+    author = get_diagram_author(id)
+    if current_user.id != author.id:
+        abort(403)
+
+    delete_diagram_by_id(id)
     return redirect(url_for('account'))
