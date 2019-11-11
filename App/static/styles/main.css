@@ -1,6 +1,6 @@
 #editor {
     background-color: lightgray;
-    height: 90vh;
+    height: 92.5vh;
     width: 100%;
     display: inline-flex;
 }
@@ -10,8 +10,14 @@
     border-bottom: solid black 1px;
 }
 
-#graph {
+#graph_container {
+    height: 100%;
     width: 70%;
+    overflow: hidden;
+}
+
+#graph {
+    height: 100%;
     background-color: white;
     border: solid black 1px;
 }
