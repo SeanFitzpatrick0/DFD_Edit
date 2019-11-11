@@ -44,8 +44,8 @@
 
 					<!-- Editors list -->
 					<ul class="list-group list-group-flush">
-						{% if get_diagram_editors(diagram)[0] is defined %} {%
-						for editor in get_diagram_editors(diagram) %}
+						{% if get_diagram_editors(diagram.id)[0] is defined %} {%
+						for editor in get_diagram_editors(diagram.id) %}
 						<li class="list-group-item pb-1">
 							<!-- Editor username -->
 							<h6>{{ editor.username }}</h6>

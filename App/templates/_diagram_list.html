@@ -10,6 +10,7 @@ diagram_list(title, user, diagrams) %}
 	<!-- List Items -->
 	{% if diagrams[0] is defined %}
 	<ul class="list-group list-group-flush">
+		<!-- TODO use is author -->
 		{% for diagram in diagrams %} {% set user_created_diagram = user.id ==
 		diagram.author %}
 
@@ -20,9 +21,12 @@ diagram_list(title, user, diagrams) %}
 
 			<!-- Diagram actions -->
 			<div class="row justify-content-around">
-				<!-- TODO load diagram in click -->
 				<!-- Load Diagram -->
-				<a href="#" class="btn btn-sm btn-info">Edit Diagram</a>
+				<a
+					href="{{ url_for('editor', id=diagram.id) }}"
+					class="btn btn-sm btn-info"
+					>Edit Diagram</a
+				>
 
 				<!-- Manage editors -->
 				<button
@@ -34,14 +38,15 @@ diagram_list(title, user, diagrams) %}
 					{% if user_created_diagram %} Manage Editors {% else %} View
 					Editors {% endif %}
 					<span class="badge badge-light">{{
-						get_diagram_editors(diagram) | length + 1
+						get_diagram_editors(diagram.id) | length + 1
 					}}</span>
 				</button>
 
 				<!-- Delete Diagram -->
 				{% if user_created_diagram %}
 				<form
-					onsubmit="return confirm_delete_diagram('{{ diagram.title }}')"
+					onsubmit="return confirm_delete_diagram(
+						'{{ diagram.title }}')"
 					action="{{ url_for('delete_diagram', id=diagram.id) }}"
 					method="POST"
 				>

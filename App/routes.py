@@ -5,7 +5,8 @@ from App.models import User, DataFlowDiagram, Invitation
 from App.utils import (get_diagram_editors, get_user_created_diagrams,
                        get_user_invited_diagrams, get_diagram_edits,
                        get_user, get_diagram_author, get_diagram,
-                       get_user_by_email, delete_diagram_by_id)
+                       get_user_by_email, delete_diagram_by_id,
+                       is_editor, is_author, load_hierarchy)
 from App import app, bcrypt, db
 
 
@@ -15,8 +16,27 @@ def home():
 
 
 @app.route('/editor')
-def editor():
-    return render_template('editor.html', title='Editor')
+@app.route('/editor/<id>')
+def editor(id=None):
+    if not id or not current_user:
+        # New diagram
+        diagram = None
+        title = 'Editor'
+        hierarchy_json = None
+
+    elif not is_author(current_user.id, id) and not is_editor(current_user.id, id):
+        # No edit permission
+        abort(403)
+
+    else:
+        # Load diagram
+        diagram = get_diagram(id)
+        if diagram is not None:
+            # Diagram exists
+            title = diagram.title
+            hierarchy_json = load_hierarchy(diagram.graph)
+
+    return render_template('editor.html', title=title, diagram=diagram, hierarchy=hierarchy_json)
 
 
 @app.route('/register', methods=['GET', 'POST'])

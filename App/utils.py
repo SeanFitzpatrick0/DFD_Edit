@@ -14,8 +14,8 @@ def get_user_invited_diagrams(user):
     return invited_diagrams
 
 
-def get_diagram_editors(diagram):
-    diagram_invitations = Invitation.query.filter_by(invited_to=diagram.id)
+def get_diagram_editors(diagram_id):
+    diagram_invitations = Invitation.query.filter_by(invited_to=diagram_id)
     editors = [User.query.get(invitation.invited_user)
                for invitation in diagram_invitations]
     return editors
@@ -49,8 +49,19 @@ def get_graph(id):
     return Graph.query.get(id)
 
 
-def get_graph_children(parent_graph):
-    return GraphChildren.query.filter_by(parent=parent_graph.id)
+def get_graph_children(id):
+    return GraphChildren.query.filter_by(parent=id)
+
+
+def load_hierarchy(id):
+    graph = get_graph(id)
+    graph_children = get_graph_children(id)
+    data = {
+        'title': graph.title,
+        'xml_model': graph.xml_model,
+        'children': [load_hierarchy(child_association.child) for child_association in graph_children]
+    }
+    return data
 
 
 def delete_diagram_by_id(id):
@@ -74,7 +85,7 @@ def delete_diagram_by_id(id):
 
 def delete_graph_and_children(id):
     graph = get_graph(id)
-    children = get_graph_children(graph)
+    children = get_graph_children(id)
 
     # Remove children graphs
     for child in children:
@@ -86,3 +97,14 @@ def delete_graph_and_children(id):
     # Remove graph
     db.session.delete(graph)
     db.session.commit()
+
+
+def is_editor(user_id, diagram_id):
+    editors = get_diagram_editors(diagram_id)
+    return any([user_id == editor.id for editor in editors])
+
+
+def is_author(user_id, diagram_id):
+    diagram = get_diagram(diagram_id)
+    return user_id == diagram.author
+    

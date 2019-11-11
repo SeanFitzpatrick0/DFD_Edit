@@ -32,7 +32,7 @@
 		<div id="title_bar" class="row justify-content-between p-2 m-1 border-dark">
 			<div class="col-4">
 				<input type="text" class="form-control border border-secondary rounded"
-					placeholder="Enter DFD Title ...">
+					placeholder="Enter DFD Title ..." value="{{ diagram.title }}">
 			</div>
 			<div class="col-4">
 				<button type="button" class="btn btn-sm btn-success">Save</button>
@@ -74,6 +74,7 @@
 
 <!-- Create Editor -->
 <script>
+	var loaded_hierarchy = JSON.parse('{{ hierarchy | tojson }}');
 	main("{{ url_for('static', filename='js/editor') }}");
 </script>
 
