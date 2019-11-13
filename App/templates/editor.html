@@ -74,8 +74,8 @@
 
 <!-- Create Editor -->
 <script>
-	var loaded_hierarchy = JSON.parse('{{ hierarchy | tojson }}');
-	main("{{ url_for('static', filename='js/editor') }}");
+	let loaded_hierarchy = {{ hierarchy | tojson }};
+	main("{{ url_for('static', filename='js/editor') }}", loaded_hierarchy);
 </script>
 
 {% endblock content %}

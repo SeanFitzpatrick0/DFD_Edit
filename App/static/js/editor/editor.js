@@ -1,12 +1,16 @@
 // Global variables
+// TODO move globals to own file
 var editor;
 var hierarchy = {};
 
-function main(editor_path) {
+function main(editor_path, loaded_hierarchy) {
 	/**
 	 * Initializes editor. Creates editor, toolbar and diagram hierarchy.
 	 * Displays error message if browser is not supported.
 	 * @param  {String} editor_path Path to editor directory.
+	 * @param  {Object} loaded_hierarchy Existing Diagram hierarchy loaded from server.
+	 *		This is loaded into the hierarchy global data structure.
+	 		Null if creating a new DFD. New hierarchy will be created in this case 
 	 */
 
 	// Checks if browser is supported
@@ -22,18 +26,12 @@ function main(editor_path) {
 			graph_container
 		);
 
-		create_toolbar(
-			editor.graph,
-			toolbar_container,
-			`${editor_path}/images`
-		);
+		create_toolbar(editor.graph, toolbar_container, `${editor_path}/images`);
 
-		create_hierarchy();
+		create_hierarchy(loaded_hierarchy);
 
 		// Add cell select event listener
-		editor.graph
-			.getSelectionModel()
-			.addListener(mxEvent.CHANGE, graph_select);
+		editor.graph.getSelectionModel().addListener(mxEvent.CHANGE, graph_select);
 	}
 }
 
@@ -193,4 +191,35 @@ function graph_select(sender, event) {
 	}
 
 	event.consume();
+}
+
+function update_editor_graph(target_graph) {
+	/**
+	 * Replaces the current editor graph with target graph.
+	 * @param  {Object} target_graph New graph model
+	 */
+
+	// Get current graph
+	let current_graph = editor.graph;
+
+	// Update editor graph
+	var parent = current_graph.getDefaultParent();
+	current_graph.getModel().beginUpdate();
+	try {
+		// Removes all cells which are not in the current graph
+		for (var key in current_graph.getModel().cells) {
+			var tmp = current_graph.getModel().getCell(key);
+
+			if (current_graph.getModel().isVertex(tmp))
+				current_graph.removeCells([tmp]);
+		}
+
+		// Merges the current and target graphs
+		current_graph
+			.getModel()
+			.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
+	} finally {
+		current_graph.getModel().endUpdate();
+		current_graph.refresh();
+	}
 }

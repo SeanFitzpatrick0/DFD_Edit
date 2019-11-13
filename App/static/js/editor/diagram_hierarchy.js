@@ -1,16 +1,47 @@
-function create_hierarchy() {
+function create_hierarchy(loaded_hierarchy) {
 	/**
-	 * Initializes diagram hierarchy.
+	 * Initializes diagram hierarchy and populates it with entries from the loaded hierarchy.
+	 * @param {Object} loaded_hierarchy Diagram hierarchy loaded from server.
+	 * 		If null will create a new diagram hierarchy.
 	 */
-
-	// Add starting diagram
-	let starting_diagram_name = "Contextual diagram";
-	add_to_hierarchy(starting_diagram_name);
+	if (!loaded_hierarchy) {
+		// Add starting diagram
+		let starting_diagram_name = "Context diagram"; // TODO make this global
+		add_to_hierarchy(starting_diagram_name);
+	} else {
+		load_hierarchy(loaded_hierarchy, null);
+		update_editor_graph(
+			get_hierarchy_diagram(loaded_hierarchy.title).graph_model
+		);
+	}
 
 	// Set starting diagram as active
 	document
-		.getElementById("Contextual_diagram_hierarchy_item")
+		.getElementById("Context_diagram_hierarchy_item")
 		.classList.add("diagram_active");
+}
+
+function load_hierarchy(current_hierarchy, parent_title) {
+	/**
+	 * Recursively adds a entry for graph and it children and set its model using it decoded xml model.
+	 * @param {Object} current_hierarchy The current sub hierarchy being loaded.
+	 */
+	// Add entry
+	add_to_hierarchy(current_hierarchy.title, parent_title);
+
+	// Set graph for entry
+	/* Parse xml */
+	let xml_model = mxUtils.parseXml(current_hierarchy.xml_model);
+	let codec = new mxCodec(xml_model);
+	let loaded_graph = codec.decode(xml_model.documentElement);
+	set_hierarchy_diagram(current_hierarchy.title, {
+		new_model: loaded_graph
+	});
+
+	// Recursively add children entries
+	current_hierarchy.children.forEach(child =>
+		load_hierarchy(child, current_hierarchy.title)
+	);
 }
 
 function add_to_hierarchy(name, parent_name) {
@@ -31,8 +62,7 @@ function add_to_hierarchy(name, parent_name) {
 	try {
 		let existing_diagram = get_hierarchy_diagram(name);
 		found_diagram = true;
-	} catch {
-	} finally {
+	} catch {} finally {
 		if (found_diagram)
 			throw `Error: Diagram ${name} already exists in hierarchy.`;
 	}
@@ -90,7 +120,10 @@ function get_hierarchy_diagram(name) {
 	return search_hierarchy;
 }
 
-function set_hierarchy_diagram(name, { new_name = null, new_model = null }) {
+function set_hierarchy_diagram(name, {
+	new_name = null,
+	new_model = null
+}) {
 	/**
 	 * Gets new values for diagram in hierarchy.
 	 * @param  {String} name Name of diagram to set.
@@ -123,7 +156,7 @@ function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
 	let search_result = null;
 	sub_hierarchy.children.forEach(child => {
 		let search = _get_hierarchy_diagram_helper(child, name);
-		if(search != null) search_result = search;
+		if (search != null) search_result = search;
 	});
 
 	return search_result;
@@ -144,7 +177,9 @@ function switch_graph(event) {
 	/* get list item if title clicked */
 	if (target_hierarchy_item.classList.contains("hierarchy_item_title"))
 		target_hierarchy_item = target_hierarchy_item.parentElement;
-	let current_hierarchy_item = document.getElementsByClassName("diagram_active")[0];
+	let current_hierarchy_item = document.getElementsByClassName(
+		"diagram_active"
+	)[0];
 
 	// Break if target item is already active
 	if (target_hierarchy_item.classList.contains("diagram_active")) return;
@@ -157,12 +192,8 @@ function switch_graph(event) {
 		"hierarchy_item_title"
 	)[0].innerText;
 
-	// Update editor graph
-	/* Get current and target graph */
+	// Save current graph
 	let current_graph = editor.graph;
-	let target_graph = get_hierarchy_diagram(target_graph_name).graph_model;
-
-	/* Save current graph */
 	/* Deep copy current graph */
 	let save_graph = new mxGraph();
 	save_graph.addCells(
@@ -171,28 +202,13 @@ function switch_graph(event) {
 		)
 	);
 	save_graph = save_graph.getModel();
-	set_hierarchy_diagram(current_graph_name, { new_model: save_graph });
+	set_hierarchy_diagram(current_graph_name, {
+		new_model: save_graph
+	});
 
 	// Update editor graph
-	var parent = current_graph.getDefaultParent();
-	current_graph.getModel().beginUpdate();
-	try {
-		// Removes all cells which are not in the current graph
-		for (var key in current_graph.getModel().cells) {
-			var tmp = current_graph.getModel().getCell(key);
-
-			if (current_graph.getModel().isVertex(tmp))
-				current_graph.removeCells([tmp]);
-		}
-
-		// Merges the current and target graphs
-		current_graph
-			.getModel()
-			.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
-	} finally {
-		current_graph.getModel().endUpdate();
-		current_graph.refresh();
-	}
+	let target_graph = get_hierarchy_diagram(target_graph_name).graph_model;
+	update_editor_graph(target_graph);
 
 	// Swap active class
 	current_hierarchy_item.classList.remove("diagram_active");
