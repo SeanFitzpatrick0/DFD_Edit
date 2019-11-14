@@ -1,3 +1,4 @@
+{% from "_save_modal.html" import save_modal with context %}
 {% extends "_base.html" %} {% block content %}
 <div id="editor">
 
@@ -30,15 +31,25 @@
 
 		<!-- Title bar -->
 		<div id="title_bar" class="row justify-content-between p-2 m-1 border-dark">
+
+			<!-- Diagram title input -->
 			<div class="col-4">
-				<input type="text" class="form-control border border-secondary rounded"
-					placeholder="Enter DFD Title ..." value="{{ diagram.title }}">
+				{% set can_edit_title = not diagram or current_user.id == diagram.author %}
+				<input id="diagram_title_input" type="text" class="form-control border border-secondary rounded"
+					placeholder="Enter DFD Title ..." value="{{ diagram.title }}"
+					{% if not can_edit_title %}disabled{% endif %}>
 			</div>
+
+			<!-- Diagram action buttons -->
 			<div class="col-4">
-				<button type="button" class="btn btn-sm btn-success">Save</button>
+				<button type="button" class="btn btn-sm btn-success" data-toggle="modal"
+					data-target="#save_modal">Save</button>
+				{{ save_modal() }}
+
 				<button type="button" class="btn btn-sm btn-info">Export</button>
 				<button type="button" class="btn btn-sm btn-warning">Download</button>
 			</div>
+
 		</div>
 
 		<!-- Graph -->
@@ -67,6 +78,8 @@
 </script>
 <script src="{{ url_for('static', filename='mxgraph-master/javascript/src/js/mxClient.js') }}"></script>
 
+<!-- Save Diagram -->
+<script src="{{ url_for('static', filename='js/editor/save_diagram.js') }}"></script>
 <!-- Diagram Hierarchy -->
 <script src="{{ url_for('static', filename='js/editor/diagram_hierarchy.js') }}"></script>
 <!-- Editor -->

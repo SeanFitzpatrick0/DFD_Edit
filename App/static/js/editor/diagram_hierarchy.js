@@ -173,38 +173,21 @@ function switch_graph(event) {
 	event.stopPropagation();
 
 	// Get hierarchy items
+	let [current_hierarchy_item, current_graph_name] = get_active_hierarchy_item_and_name();
 	let target_hierarchy_item = event.target;
 	/* get list item if title clicked */
 	if (target_hierarchy_item.classList.contains("hierarchy_item_title"))
 		target_hierarchy_item = target_hierarchy_item.parentElement;
-	let current_hierarchy_item = document.getElementsByClassName(
-		"diagram_active"
-	)[0];
 
 	// Break if target item is already active
 	if (target_hierarchy_item.classList.contains("diagram_active")) return;
 
-	// Get active and target items names
-	let current_graph_name = current_hierarchy_item.getElementsByClassName(
-		"hierarchy_item_title"
-	)[0].innerText;
 	let target_graph_name = target_hierarchy_item.getElementsByClassName(
 		"hierarchy_item_title"
 	)[0].innerText;
 
 	// Save current graph
-	let current_graph = editor.graph;
-	/* Deep copy current graph */
-	let save_graph = new mxGraph();
-	save_graph.addCells(
-		current_graph.cloneCells(
-			current_graph.getChildCells(current_graph.getDefaultParent())
-		)
-	);
-	save_graph = save_graph.getModel();
-	set_hierarchy_diagram(current_graph_name, {
-		new_model: save_graph
-	});
+	save_current_graph(current_graph_name);
 
 	// Update editor graph
 	let target_graph = get_hierarchy_diagram(target_graph_name).graph_model;
@@ -230,4 +213,21 @@ function add_diagram_button_handler() {
 		.getElementsByClassName("hierarchy_item_title")[0].innerText;
 	// Add to hierarchy
 	add_to_hierarchy(item_name, parent_name);
+}
+
+function get_active_hierarchy_item_and_name() {
+	/**
+	 * Gets the active hierarchy item and its graph name
+	 * @returns Active hierarchy list item
+	 * @returns Name of active graph
+	 */
+
+	let active_hierarchy_item = document.getElementsByClassName(
+		"diagram_active"
+	)[0];
+	let active_graph_name = active_hierarchy_item.getElementsByClassName(
+		"hierarchy_item_title"
+	)[0].innerText;
+
+	return [active_hierarchy_item, active_graph_name];
 }

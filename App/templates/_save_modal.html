@@ -1,0 +1,37 @@
+{% macro save_modal() %}
+<!-- Modal -->
+<div class="modal fade" id="save_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+
+            <!-- Title -->
+            <div class="modal-header">
+                <h5 class="modal-title">Save Diagram</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Save Form -->
+            <div class="modal-body">
+                <!-- Edit Comment -->
+                <div class="form-group">
+                    <input id="edit_message_input" type="text" class="form-control"
+                        placeholder="Enter an edit comment ...">
+                </div>
+
+                <!-- Save / Cancel Buttons -->
+                <!-- TODO change save action for new graphs -->
+                <div class="form-group float-right">
+                    <button class="btn btn-success"
+                        onclick="save_diagram_button_handler(`{{ url_for('save_diagram', id=diagram.id) }}`)"
+                        data-dismiss="modal">Save</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

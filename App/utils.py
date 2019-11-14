@@ -107,4 +107,45 @@ def is_editor(user_id, diagram_id):
 def is_author(user_id, diagram_id):
     diagram = get_diagram(diagram_id)
     return user_id == diagram.author
-    
+
+
+def save_graph(diagram_id, new_graph_data):
+    diagram = get_diagram(diagram_id)
+    old_root_graph_id = diagram.graph
+
+    # Replace old graph data
+    new_root_graph_id = create_graph_and_children(new_graph_data, 0)
+    diagram.graph = new_root_graph_id
+    db.session.commit()
+
+    # Delete old graph data
+    delete_graph_and_children(old_root_graph_id)
+
+
+def create_graph_and_children(graph_data, level):
+    # Create graph
+    graph = Graph(title=graph_data['title'], level=level,
+                  xml_model=graph_data['xml_model'])
+    db.session.add(graph)
+    db.session.commit()
+
+    # Create children graphs
+    child_graph_ids = [create_graph_and_children(child, level + 1)
+                       for child in graph_data['children']]
+
+    # Create child associations
+    for child_id in child_graph_ids:
+        parent_child_association = GraphChildren(
+            parent=graph.id, child=child_id)
+        db.session.add(parent_child_association)
+        db.session.commit()
+
+    return graph.id
+
+
+def add_edit(editor_id, diagram_id, message):
+    new_edit = Edit(editor=editor_id,
+                    edited_diagram=diagram_id, message=message)
+    db.session.add(new_edit)
+    db.session.commit()
+

@@ -6,7 +6,8 @@ from App.utils import (get_diagram_editors, get_user_created_diagrams,
                        get_user_invited_diagrams, get_diagram_edits,
                        get_user, get_diagram_author, get_diagram,
                        get_user_by_email, delete_diagram_by_id,
-                       is_editor, is_author, load_hierarchy)
+                       is_editor, is_author, load_hierarchy, save_graph,
+                       add_edit)
 from App import app, bcrypt, db
 
 
@@ -37,6 +38,38 @@ def editor(id=None):
             hierarchy_json = load_hierarchy(diagram.graph)
 
     return render_template('editor.html', title=title, diagram=diagram, hierarchy=hierarchy_json)
+
+
+@app.route('/editor/<id>', methods=['PUT'])
+@login_required
+def save_diagram(id):
+    # Validated user permission
+    if not is_author(current_user.id, id) and not is_editor(current_user.id, id):
+        abort(403)
+
+    diagram = get_diagram(id)
+
+    # Validate title edit
+    new_title = request.json['title']
+    if not new_title == diagram.title and not is_author(current_user.id, id):
+        # User lacks permission to edit title
+        abort(403)
+    else:
+        if len(new_title) == 0:
+            # Empty title
+            abort(500)
+
+    # Set new graph
+    save_graph(id, request.json['dfd'])
+
+    # Set new title
+    diagram.title = new_title
+    db.session.commit()
+
+    # Create edit entry
+    add_edit(current_user.id, diagram.id, request.json['edit_message'])
+
+    return {'success': True}
 
 
 @app.route('/register', methods=['GET', 'POST'])
