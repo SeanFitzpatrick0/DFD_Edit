@@ -22,10 +22,11 @@
                 </div>
 
                 <!-- Save / Cancel Buttons -->
-                <!-- TODO change save action for new graphs -->
                 <div class="form-group float-right">
+                    {% set save_url = url_for('save_diagram', id=diagram.id) if diagram else url_for('create_diagram') %}
+                    {% set save_method = 'PUT' if diagram else 'POST' %}
                     <button class="btn btn-success"
-                        onclick="save_diagram_button_handler(`{{ url_for('save_diagram', id=diagram.id) }}`)"
+                        onclick="save_diagram_button_handler(`{{ save_url }}`, `{{ save_method }}`)"
                         data-dismiss="modal">Save</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>

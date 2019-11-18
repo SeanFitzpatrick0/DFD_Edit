@@ -1,7 +1,9 @@
-async function save_diagram_button_handler(save_url) {
+async function save_diagram_button_handler(save_url, save_method) {
     /**
      * Saves Data Flow Diagram to server
      * @param  {String} save_url URL to make PUT request to.
+     * @param  {String} save_method The HTTP request method to use.
+     *      POST when creating a new graph, PUT updating an existing graph
      */
 
     // Save current active graph
@@ -16,8 +18,9 @@ async function save_diagram_button_handler(save_url) {
     let edit_message = document.getElementById('edit_message_input').value
 
     // Make request
-    const response = await fetch(save_url, {
-        method: 'PUT',
+    // TODO provide better error alerting
+    fetch(save_url, {
+        method: save_method,
         credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json'
@@ -27,13 +30,16 @@ async function save_diagram_button_handler(save_url) {
             dfd: dfd,
             edit_message: edit_message
         })
+    }).then(response => {
+        if (response.status != 200) {
+            // Alert Error
+            alert('Error: Unable to save diagram');
+        } else return response.json();
+    }).then(json => {
+        // Redirect if created new diagram
+        if (json.success && json.diagram_url)
+            window.location.href = json.diagram_url;
     });
-
-    // Handel response errors
-    // TODO provide better error alerting
-    if (response.status != 200) {
-        alert('Error: Unable to save diagram');
-    }
 }
 
 

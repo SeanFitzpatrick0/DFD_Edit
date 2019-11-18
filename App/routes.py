@@ -7,7 +7,7 @@ from App.utils import (get_diagram_editors, get_user_created_diagrams,
                        get_user, get_diagram_author, get_diagram,
                        get_user_by_email, delete_diagram_by_id,
                        is_editor, is_author, load_hierarchy, save_graph,
-                       add_edit)
+                       add_edit, create_graph_and_children)
 from App import app, bcrypt, db
 
 
@@ -18,6 +18,7 @@ def home():
 
 @app.route('/editor')
 @app.route('/editor/<id>')
+@login_required
 def editor(id=None):
     if not id or not current_user:
         # New diagram
@@ -195,3 +196,25 @@ def delete_diagram(id):
 
     delete_diagram_by_id(id)
     return redirect(url_for('account'))
+
+
+@app.route('/diagram', methods=['POST'])
+@login_required
+def create_diagram():
+
+    # Validate diagram title
+    if len(request.json['title']) == 0:
+        # Empty title
+        abort(500)
+
+    # Create Diagram
+    root = create_graph_and_children(request.json['dfd'], 0)
+    new_diagram = DataFlowDiagram(
+        title=request.json['title'], author=current_user.id, graph=root)
+    db.session.add(new_diagram)
+    db.session.commit()
+
+    # Create edit
+    add_edit(current_user.id, new_diagram.id, request.json['edit_message'])
+
+    return {'success': True, 'diagram_url': url_for('editor', id=new_diagram.id)}
