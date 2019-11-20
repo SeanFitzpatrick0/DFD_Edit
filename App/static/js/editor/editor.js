@@ -3,6 +3,18 @@
 var editor;
 var hierarchy = {};
 
+// Global styles
+const ID_PERMISSION =
+	"editable=0;movable=0;resizable=0;cloneable=0;deletable=0;";
+const CONTAINER_STYLE =
+	"fillColor=white;strokeColor=#343a40;fontColor=#343a40;rounded=1;foldable=0;";
+const ID_STYLE =
+	"fillColor=#343a40;fontColor=white;strokeColor=#343a40;rounded=1;" +
+	ID_PERMISSION;
+const entity_dimensions = { width: 100, height: 80 };
+const process_dimensions = { width: 120, height: 120 };
+const datastore_dimensions = { width: 120, height: 60 };
+
 function main(editor_path, loaded_hierarchy) {
 	/**
 	 * Initializes editor. Creates editor, toolbar and diagram hierarchy.
@@ -82,33 +94,45 @@ function create_toolbar(graph, toolbar_container, image_dir_path) {
 	add_toolbar_item(
 		graph,
 		toolbar_container,
-		"",
-		`${image_dir_path}/rectangle.gif`
+		add_entity_to_graph,
+		entity_dimensions,
+		`${image_dir_path}/entity.png`
 	);
 
 	// Add process element
 	add_toolbar_item(
 		graph,
 		toolbar_container,
-		"shape=ellipse",
-		`${image_dir_path}/ellipse.gif`
+		add_process_to_graph,
+		process_dimensions,
+		`${image_dir_path}/process.png`
+	);
+
+	// Add data store element
+	add_toolbar_item(
+		graph,
+		toolbar_container,
+		add_datastore_to_graph,
+		datastore_dimensions,
+		`${image_dir_path}/datastore.png`
 	);
 }
 
-function add_toolbar_item(graph, toolbar, style, image) {
+function add_toolbar_item(graph, toolbar, add_item, item_dimension, image) {
 	/**
 	 * Adds icon to toolbar and adds drag event handler for item
 	 * @param  {Object} graph Editor graph.
 	 * @param  {Object} toolbar HTML element of the toolbar container.
-	 * @param  {String} style Style of the graph element.
+	 * @param  {Function} add_item Function that adds the item to item to the graph.
+	 * @param  {Object} item_dimension Width and Height of the item.
 	 * @param  {String} image Path to the image that will be added to the toolbar.
 	 */
 
 	// Create toolbar item image and add to toolbar
 	let img = document.createElement("img");
 	img.setAttribute("src", image);
-	img.style.width = "48px";
-	img.style.height = "48px";
+	img.style.width = `${item_dimension.width / 1.5}px`;
+	img.style.height = `${item_dimension.height / 1.5}px`;
 	img.title = "Drag this to the diagram";
 	toolbar.appendChild(img);
 
@@ -117,38 +141,22 @@ function add_toolbar_item(graph, toolbar, style, image) {
 	let add_item_to_graph = (graph, evt, cell, x, y) => {
 		let parent = graph.getDefaultParent();
 		let model = graph.getModel();
-		let vertex = null;
-		let vertex_id = null; // Assigns unique id if null
-		let vertex_name = "Test";
-		let width = 120;
-		let height = 120;
 
 		// Preform update
 		model.beginUpdate();
 		try {
-			vertex = graph.insertVertex(
-				parent,
-				vertex_id,
-				vertex_name,
-				x,
-				y,
-				width,
-				height,
-				style
-			);
+			let vertex = add_item(parent, graph, x, y, item_dimension);
+			graph.setSelectionCell(vertex);
 		} finally {
 			model.endUpdate();
 		}
-
-		// Select added vertex
-		graph.setSelectionCell(vertex);
 	};
 
 	/* Preview shown when dragging item over graph */
 	let drag_element = document.createElement("div");
 	drag_element.style.border = "dashed black 1px";
-	drag_element.style.width = "120px";
-	drag_element.style.height = "120px";
+	drag_element.style.width = `${item_dimension.width}px`;
+	drag_element.style.height = `${item_dimension.height}px`;
 	let drag_offset; // Offset away from mouse when dragged
 
 	/* Add drag event handler */
@@ -222,4 +230,75 @@ function update_editor_graph(target_graph) {
 		current_graph.getModel().endUpdate();
 		current_graph.refresh();
 	}
+}
+
+function add_process_to_graph(parent, graph, x, y, dimensions) {
+	/**
+	 * Adds process item to graph
+	 */
+	let container = graph.insertVertex(
+		parent,
+		null,
+		"Test",
+		x,
+		y,
+		dimensions.width,
+		dimensions.height,
+		CONTAINER_STYLE
+	);
+	let id = graph.insertVertex(
+		container,
+		null,
+		"ID",
+		0,
+		0,
+		dimensions.width,
+		dimensions.height / 5,
+		ID_STYLE
+	);
+	return container;
+}
+
+function add_datastore_to_graph(parent, graph, x, y, dimensions) {
+	/**
+	 * Adds process datastore to graph
+	 */
+	let container = graph.insertVertex(
+		parent,
+		null,
+		"Test",
+		x,
+		y,
+		dimensions.width,
+		dimensions.height,
+		CONTAINER_STYLE
+	);
+	let id = graph.insertVertex(
+		container,
+		null,
+		"ID",
+		0,
+		0,
+		dimensions.width / 5,
+		dimensions.height,
+		ID_STYLE
+	);
+	return container;
+}
+
+function add_entity_to_graph(parent, graph, x, y, dimensions) {
+	/**
+	 * Adds entity datastore to graph
+	 */
+	let container = graph.insertVertex(
+		parent,
+		null,
+		"Test",
+		x,
+		y,
+		dimensions.width,
+		dimensions.height,
+		CONTAINER_STYLE
+	);
+	return container;
 }
