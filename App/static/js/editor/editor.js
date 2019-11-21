@@ -181,8 +181,8 @@ function graph_select(sender, event) {
 	// Get selected cells
 	var cells = event.getProperty("removed");
 
-	if (cells && cells.length == 1) {
-		// Single cell selected
+	if (cells && cells.length == 1 && cells[0].item_type == "process") {
+		// Single process selected
 		let cell = cells[0];
 
 		// Display item configurations
@@ -236,10 +236,11 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds process item to graph
 	 */
+	const item_type = "process";
 	let container = graph.insertVertex(
 		parent,
 		null,
-		"Test",
+		item_type,
 		x,
 		y,
 		dimensions.width,
@@ -256,6 +257,8 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height / 5,
 		ID_STYLE
 	);
+
+	container.item_type = item_type;
 	return container;
 }
 
@@ -263,10 +266,11 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds process datastore to graph
 	 */
+	const item_type = "datastore";
 	let container = graph.insertVertex(
 		parent,
 		null,
-		"Test",
+		item_type,
 		x,
 		y,
 		dimensions.width,
@@ -283,6 +287,8 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height,
 		ID_STYLE
 	);
+
+	container.item_type = item_type;
 	return container;
 }
 
@@ -290,15 +296,18 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds entity datastore to graph
 	 */
+	const item_type = "entity";
 	let container = graph.insertVertex(
 		parent,
 		null,
-		"Test",
+		item_type,
 		x,
 		y,
 		dimensions.width,
 		dimensions.height,
 		CONTAINER_STYLE
 	);
+
+	container.item_title = item_type;
 	return container;
 }
