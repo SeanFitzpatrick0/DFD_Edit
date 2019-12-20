@@ -17,12 +17,12 @@
 				<h5><span class="badge badge-light">Item Configurations</span></h5>
 			</div>
 			<hr>
-			<h5 id="item_configurations_title">
-				<h5>
-					<button id="item_configurations_add_sub_diagram" type="button" class="btn btn-primary"
-						onclick="add_diagram_button_handler()">
-						Add Sub-Diagram
-					</button>
+			<h5 id="item_configurations_id"></h5>
+			<h5 id="item_configurations_title"></h5>
+			<button id="item_configurations_add_sub_diagram" type="button" class="btn btn-primary"
+				onclick="add_diagram_button_handler()">
+				Add Sub-Diagram
+			</button>
 		</div>
 	</div>
 
@@ -80,6 +80,8 @@
 
 <!-- Save Diagram -->
 <script src="{{ url_for('static', filename='js/editor/save_diagram.js') }}"></script>
+<!-- Diagram Validation -->
+<script src="{{ url_for('static', filename='js/editor/validator.js') }}"></script>
 <!-- Diagram Hierarchy -->
 <script src="{{ url_for('static', filename='js/editor/diagram_hierarchy.js') }}"></script>
 <!-- Editor -->
@@ -87,7 +89,8 @@
 
 <!-- Create Editor -->
 <script>
-	let loaded_hierarchy = {{ hierarchy | tojson }};
+	// TODO change to parse as string
+	let loaded_hierarchy = {{hierarchy | tojson}};
 	main("{{ url_for('static', filename='js/editor') }}", loaded_hierarchy);
 </script>
 

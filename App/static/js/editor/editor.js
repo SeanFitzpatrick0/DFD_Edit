@@ -188,7 +188,10 @@ function graph_select(sender, event) {
 		// Display item configurations
 		/* Add item title */
 		let item_title = document.getElementById("item_configurations_title");
+		let item_id = document.getElementById("item_configurations_id");
 		item_title.innerHTML = cell.value;
+		item_id.innerHTML = cell.children[0].value;
+
 		/* Show menu */
 		let item_configuration = document.getElementById("item_configurations");
 		item_configuration.style.display = "block";
@@ -247,10 +250,14 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height,
 		CONTAINER_STYLE
 	);
+	
+	let active_graph_name = get_active_hierarchy_item_and_name()[1];
+	let active_graph_id = get_hierarchy_diagram(active_graph_name).process_id;
+
 	let id = graph.insertVertex(
 		container,
 		null,
-		"ID",
+		create_process_id(active_graph_id),
 		0,
 		0,
 		dimensions.width,

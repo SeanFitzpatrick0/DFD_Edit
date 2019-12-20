@@ -7,7 +7,7 @@ function create_hierarchy(loaded_hierarchy) {
 	if (!loaded_hierarchy) {
 		// Add starting diagram
 		let starting_diagram_name = "Context diagram"; // TODO make this global
-		add_to_hierarchy(starting_diagram_name);
+		add_to_hierarchy(starting_diagram_name, null, null);
 	} else {
 		load_hierarchy(loaded_hierarchy, null);
 		update_editor_graph(
@@ -44,12 +44,13 @@ function load_hierarchy(current_hierarchy, parent_title) {
 	);
 }
 
-function add_to_hierarchy(name, parent_name) {
+function add_to_hierarchy(name, parent_name, process_id) {
 	/**
 	 * Adds new diagram to hierarchy data structure and html diagram list.
 	 * @param  {String} name Name of diagram to add.
 	 * @param  {String} parent_name Name of parent diagram.
 	 *                              Null if adding first diagram.
+	 * @param  {String} process_id ID of the process
 	 * @throws exception if diagram name already in hierarchy or if name is empty.
 	 */
 
@@ -70,6 +71,7 @@ function add_to_hierarchy(name, parent_name) {
 	// Add entry to hierarchy
 	let empty_graph_model = new mxGraph().getModel();
 	let entry = {
+		process_id: process_id,
 		name: name,
 		graph_model: empty_graph_model,
 		children: []
@@ -207,12 +209,14 @@ function add_diagram_button_handler() {
 	// Get item name
 	let item_name = document.getElementById("item_configurations_title")
 		.innerText;
+	let item_id = document.getElementById("item_configurations_id")
+		.innerText;
 	// Get parent name
 	let parent_name = document
 		.getElementsByClassName("diagram_active")[0]
 		.getElementsByClassName("hierarchy_item_title")[0].innerText;
 	// Add to hierarchy
-	add_to_hierarchy(item_name, parent_name);
+	add_to_hierarchy(item_name, parent_name, item_id);
 }
 
 function get_active_hierarchy_item_and_name() {
