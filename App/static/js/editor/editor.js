@@ -11,9 +11,18 @@ const CONTAINER_STYLE =
 const ID_STYLE =
 	"fillColor=#343a40;fontColor=white;strokeColor=#343a40;rounded=1;" +
 	ID_PERMISSION;
-const entity_dimensions = { width: 100, height: 80 };
-const process_dimensions = { width: 120, height: 120 };
-const datastore_dimensions = { width: 120, height: 60 };
+const entity_dimensions = {
+	width: 100,
+	height: 80
+};
+const process_dimensions = {
+	width: 120,
+	height: 120
+};
+const datastore_dimensions = {
+	width: 120,
+	height: 60
+};
 
 function main(editor_path, loaded_hierarchy) {
 	/**
@@ -44,6 +53,9 @@ function main(editor_path, loaded_hierarchy) {
 
 		// Add cell select event listener
 		editor.graph.getSelectionModel().addListener(mxEvent.CHANGE, graph_select);
+
+		// Add cell delete event listener
+		editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
 	}
 }
 
@@ -204,6 +216,39 @@ function graph_select(sender, event) {
 	event.consume();
 }
 
+function graph_delete(sender, event) {
+	/**
+	 * Cell deletion event handler.
+	 * @param  {Object} sender Sender of the event
+	 * @param  {Object} event Details about event
+	 */
+	/* This checks that the delete event is resulting from the users 
+		removing a cell and not from cells being remove when switching graphs */
+	const GRAPH_SWITCH_UPDATE_LEVEL = 2;
+	if (sender.getModel().updateLevel != GRAPH_SWITCH_UPDATE_LEVEL) {
+
+		// Check if cell has sub processes
+		let cells = event.getProperty('cells')
+		let remove_cells_with_subprocess = [];
+		cells.forEach(cell => {
+			let process_title = cell.value;
+			try {
+				let found_hierarchy = get_hierarchy_diagram(process_title);
+				remove_cells_with_subprocess.push(found_hierarchy.name);
+			} catch {}
+		});
+
+		// Remove from sub processes hierarchy
+		remove_cells_with_subprocess.forEach(process_name => {
+			remove_from_hierarchy(process_name);
+		});
+
+		// TODO update process id's when deleted
+	}
+
+	event.consume();
+}
+
 function update_editor_graph(target_graph) {
 	/**
 	 * Replaces the current editor graph with target graph.
@@ -250,7 +295,7 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height,
 		CONTAINER_STYLE
 	);
-	
+
 	let active_graph_name = get_active_hierarchy_item_and_name()[1];
 	let active_graph_id = get_hierarchy_diagram(active_graph_name).process_id;
 

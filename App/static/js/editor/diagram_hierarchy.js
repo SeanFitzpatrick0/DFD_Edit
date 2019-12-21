@@ -107,6 +107,28 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	added_item.addEventListener("click", switch_graph);
 }
 
+function remove_from_hierarchy(name) {
+	/**
+	 * Removes diagram from hierarchy data structure and html diagram list.
+	 * @param  {String} name Name of diagram to remove.
+	 * @throws exception if diagram is not in hierarchy
+	 */
+
+	// Validate inputs
+	/* Check name not empty */
+	if (!name || name.length == 0)
+		throw "Error: Can't remove a diagram with no name.";
+	/* Check if diagram is already in hierarchy */
+	get_hierarchy_diagram(name);
+
+	// Remove from html hierarchy list
+	let id_name = name.replace(/[ ]/g, "_"); // replace spaces with underscore
+	document.getElementById(`${id_name}_hierarchy_item`).remove();
+
+	// Remove from hierarchy data structure
+	_remove_diagram_hierarchy_helper(hierarchy, name);
+}
+
 function get_hierarchy_diagram(name) {
 	/**
 	 * Gets diagram from hierarchy.
@@ -162,6 +184,23 @@ function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
 	});
 
 	return search_result;
+}
+
+function _remove_diagram_hierarchy_helper(sub_hierarchy, search_name) {
+	/**
+	 * Recursive for diagram hierarchy and removes it.
+	 * @param  {Object} sub_hierarchy Hierarchy being searched.
+	 * @param  {String} name Name of diagram hierarchy to remove.
+	 */
+	// Filter out hierarchy to remove 
+	sub_hierarchy.children = sub_hierarchy.children.filter(child => {
+		if (child.name != search_name) {
+			// Search each child
+			_remove_diagram_hierarchy_helper(child, search_name);
+			return true;
+		}
+		return false;
+	});
 }
 
 function switch_graph(event) {
