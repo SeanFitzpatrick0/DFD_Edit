@@ -245,6 +245,12 @@ function add_diagram_button_handler() {
 	 * Adds new sub-diagram for selected process.
 	 */
 
+	// Update model of current graph
+	let current_graph_name = get_active_hierarchy_item_and_name()[1];
+	set_hierarchy_diagram(current_graph_name, {
+		new_model: editor.graph.getModel()
+	});
+
 	// Get item name
 	let item_name = document.getElementById("item_configurations_title")
 		.innerText;
@@ -256,6 +262,9 @@ function add_diagram_button_handler() {
 		.getElementsByClassName("hierarchy_item_title")[0].innerText;
 	// Add to hierarchy
 	add_to_hierarchy(item_name, parent_name, item_id);
+
+	// Add any connected entities into sub process
+	add_entities(item_name, parent_name);
 }
 
 function get_active_hierarchy_item_and_name() {

@@ -1,5 +1,6 @@
 // Global variables
 // TODO move globals to own file
+// TODO prevent graph items from resize
 var editor;
 var hierarchy = {};
 
@@ -246,8 +247,7 @@ function graph_delete(sender, event) {
 		// Update process id's when deleted
 		/* Gets the text of the active diagram list item and 
 		selects the first line as there will be multiple lines if it has nested list items */
-		let current_graph_name = document.getElementsByClassName("diagram_active")[0]
-			.innerText.split('\n')[0];
+		let current_graph_name = get_active_hierarchy_item_and_name()[1];
 		let current_graph_id = get_hierarchy_diagram(current_graph_name).process_id;
 		update_process_ids(current_graph_id, editor.graph.getModel());
 	}
