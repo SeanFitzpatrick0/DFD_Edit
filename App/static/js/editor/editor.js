@@ -5,6 +5,7 @@ var editor;
 var hierarchy = {};
 
 // Global styles
+// TODO prevent connectable
 const ID_PERMISSION =
 	"editable=0;movable=0;resizable=0;cloneable=0;deletable=0;";
 const CONTAINER_STYLE =
@@ -48,19 +49,41 @@ function main(editor_path, loaded_hierarchy) {
 			graph_container
 		);
 
-		create_toolbar(editor.graph, toolbar_container, `${editor_path}/images`);
+		create_toolbar(
+			editor.graph,
+			toolbar_container,
+			`${editor_path}/images`
+		);
 
 		create_hierarchy(loaded_hierarchy);
 
 		// Add graph change event listener
-		editor.graph.getSelectionModel().addListener(mxEvent.CHANGE, (sender, event) => {
-			// Handel graph selection
-			graph_select(sender, event);
+		editor.graph
+			.getSelectionModel()
+			.addListener(mxEvent.CHANGE, (sender, event) => {
+				// Handel graph selection
+				graph_select(sender, event);
 
-			// Save change to diagram hierarchy data structure
-			let active_graph_name = get_active_hierarchy_item_and_name()[1];
-			save_current_graph(active_graph_name);
-		});
+				// Add any updated entities
+				let cells = event.getProperty("removed") || [];
+				cells.forEach(cell => {
+					// If edge get the connected entity
+					if (cell.source && cell.source.item_type == "entity")
+						cell = cell.source;
+					else if (cell.target && cell.target.item_type == "entity")
+						cell = cell.target;
+
+					// Add entity
+					if (cell.item_type == "entity") {
+						let active_process_name = get_active_hierarchy_item_and_name()[1];
+						add_entity(cell, active_process_name, new Set());
+					}
+				});
+
+				// Save change to diagram hierarchy data structure
+				let active_graph_name = get_active_hierarchy_item_and_name()[1];
+				save_current_graph(active_graph_name);
+			});
 
 		// Add cell delete event listener
 		editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
@@ -199,7 +222,7 @@ function graph_select(sender, event) {
 	 */
 
 	// Get selected cells
-	var cells = event.getProperty("removed");
+	let cells = event.getProperty("removed");
 
 	if (cells && cells.length == 1 && cells[0].item_type == "process") {
 		// Single process selected
@@ -234,8 +257,7 @@ function graph_delete(sender, event) {
 		removing a cell and not from cells being remove when switching graphs */
 	const GRAPH_SWITCH_UPDATE_LEVEL = 2;
 	if (sender.getModel().updateLevel != GRAPH_SWITCH_UPDATE_LEVEL) {
-
-		let cells = event.getProperty('cells')
+		let cells = event.getProperty("cells");
 		let remove_cells_with_subprocess = [];
 		cells.forEach(cell => {
 			// Handel deleting entity
@@ -261,7 +283,8 @@ function graph_delete(sender, event) {
 		/* Gets the text of the active diagram list item and 
 		selects the first line as there will be multiple lines if it has nested list items */
 		let current_graph_name = get_active_hierarchy_item_and_name()[1];
-		let current_graph_id = get_hierarchy_diagram(current_graph_name).process_id;
+		let current_graph_id = get_hierarchy_diagram(current_graph_name)
+			.process_id;
 		update_process_ids(current_graph_id, editor.graph.getModel());
 	}
 
@@ -335,7 +358,7 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 
 function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	/**
-	 * Adds process datastore to graph
+	 * Adds datastore to graph
 	 */
 	const item_type = "datastore";
 	let container = graph.insertVertex(
@@ -365,7 +388,7 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 
 function add_entity_to_graph(parent, graph, x, y, dimensions) {
 	/**
-	 * Adds entity datastore to graph
+	 * Adds entity to graph
 	 */
 	const item_type = "entity";
 	let container = graph.insertVertex(
@@ -381,4 +404,52 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 
 	container.item_type = item_type;
 	return container;
+}
+
+function find_cell_in_graph(graph, cell_name, cell_type) {
+	/**
+	 * Finds a specified cell in a given graph
+	 * @param {Object} graph Graph model being searched
+	 * @param {String} cell_name Name of cell being searched for
+	 * @param {String} cell_type Type of cell being searched for
+	 * @returns The found cell or null if not found
+	 * @throws Exception if invalid cell type
+	 */
+	// validate cell type
+	validate_cell_type(cell_type);
+
+	// Find cell in graph
+	for (key in graph.cells)
+		if (
+			graph.cells[key].item_type == cell_type &&
+			graph.cells[key].value == cell_name
+		)
+			return graph.cells[key];
+	return null;
+}
+
+function find_connecting_cells(cell, cell_type) {
+	/**
+	 * Finds all cells connected to a given cell of a set type
+	 * @param {Object} cell Root cell
+	 * @param {String} cell_type Type of cell being searched for
+	 * @returns The list of connected cells
+	 * @throws Exception if invalid cell type
+	 */
+	// validate cell type
+	validate_cell_type(cell_type);
+
+	connected_cells = [];
+	(cell.edges || []).forEach(edge => {
+		["target", "source"].forEach(direction => {
+			if (
+				edge[direction].item_type == cell_type &&
+				(edge[direction].name != cell.value ||
+					edge[direction].item_title != cell_type)
+			)
+				connected_cells.push(edge[direction]);
+		});
+	});
+
+	return connected_cells;
 }

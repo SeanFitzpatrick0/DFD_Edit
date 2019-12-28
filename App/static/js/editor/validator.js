@@ -10,12 +10,13 @@ function create_process_id(parent_id, id_ending) {
 	if (parent_id == null) return "0";
 
 	// If no ending, increment number of processes
-	if (typeof (id_ending) === 'undefined') {
+	if (typeof id_ending === "undefined") {
 		let current_graph = editor.graph.getModel();
 		let graph_cells = current_graph.cells;
 		let process_cells = [];
 		for (cell in graph_cells)
-			if (graph_cells[cell].item_type == "process") process_cells.push(cell);
+			if (graph_cells[cell].item_type == "process")
+				process_cells.push(cell);
 		id_ending = process_cells.length + 1;
 	}
 
@@ -57,34 +58,43 @@ function update_process_ids(parent_id, graph) {
 	editor.graph.refresh();
 }
 
-function add_entities(process_name, parent_name) {
+function add_entity(entity_cell, process_name, visited) {
 	/**
-	 * Adds a processes connected entities into its sub diagram
-	 * @param  {String} process_name Name of sub process being created
-	 * @param  {String} parent_name Name of parent process
+	 * Adds a entity to all parent processes and connected sub processes
+	 * @param  {Object} entity_cell The entity cell being added
+	 * @param  {String} process_name The name of the process the entity is being added to
+	 * @param  {Set} visited Set of the names of already visited processes
+	 * 					Used to prevent cycles when traversing the DFD
 	 */
-	// Search for connected entities in graph model
-	let entities = [];
-	let parent_graph = get_hierarchy_diagram(parent_name).graph_model
-	let process_cell = null;
-	/* find sub process being created in parent graph */
-	for (key in parent_graph.cells)
-		if (parent_graph.cells[key].value == process_name)
-			process_cell = parent_graph.cells[key];
 
-	/* find all connected entities */
-	if (process_cell.edges)
-		process_cell.edges.forEach(edge => {
-			if (edge.source.item_type == "entity")
-				entities.push(edge.source);
-			else if (edge.target.item_type == "entity")
-				entities.push(edge.target);
-		});
+	// Check if already visited
+	if (visited.has(process_name)) return;
+	visited.add(process_name);
 
-	// Add those entities to the sub process graph
-	let sub_graph = get_hierarchy_diagram(process_name).graph_model;
-	let parent = sub_graph.getChildAt(sub_graph.getRoot(), 0);
-	entities.forEach(entity => sub_graph.add(parent, entity.clone()));
+	// Add entity in parent process
+	let process = get_hierarchy_diagram(process_name);
+	if (process.parent_name)
+		add_entity(entity_cell, process.parent_name, visited);
+
+	// Add entity to all connected sub processes
+	let sub_processes = find_connecting_cells(entity_cell, "process");
+
+	sub_processes.forEach(process => {
+		// Add entity to subprocess if exists
+		try {
+			get_hierarchy_diagram(process.value);
+			add_entity(entity_cell, process.value, visited);
+		} catch {}
+	});
+
+	// Add entity to process
+	let current_graph = process.graph_model;
+
+	/* Check if entity is already in the graph */
+	if (find_cell_in_graph(current_graph, entity_cell.value, "entity")) return;
+
+	let parent = current_graph.getChildAt(current_graph.getRoot(), 0);
+	current_graph.add(parent, entity_cell.clone());
 }
 
 function remove_entity(entity_name, process_name, visited) {
@@ -93,6 +103,7 @@ function remove_entity(entity_name, process_name, visited) {
 	 * @param  {String} entity_name Name of the entity to remove
 	 * @param  {String} process_name Name of the process to remove the entity from
 	 * @param  {Set}    visited Set of the names of already visited processes
+	 * 				Used to prevent cycles when traversing the DFD
 	 */
 
 	// Exit is already visited process
@@ -107,22 +118,11 @@ function remove_entity(entity_name, process_name, visited) {
 	// Remove entity from children processes
 	/* find entity cell in graph */
 	let current_graph = process.graph_model;
-	let entity_cell = null;
-	for (key in current_graph.cells)
-		if (current_graph.cells[key].value == entity_name)
-			entity_cell = current_graph.cells[key];
+	let entity_cell = find_cell_in_graph(current_graph, entity_name, "entity");
 
 	/* find all connected processes */
-	let connected_processes = [];
-	if (entity_cell.edges)
-		entity_cell.edges.forEach(edge => {
-			if (edge.source.item_type == "process")
-				connected_processes.push(edge.source);
-			else if (edge.target.item_type == "process")
-				connected_processes.push(edge.target);
-		});
-
-	connected_processes.forEach((process) => {
+	let connected_processes = find_connecting_cells(entity_cell, "process");
+	connected_processes.forEach(process => {
 		try {
 			get_hierarchy_diagram(process.value); // Check if has sub process
 			remove_entity(entity_name, process.value, visited);
@@ -135,10 +135,22 @@ function remove_entity(entity_name, process_name, visited) {
 		remove_graph.getModel().beginUpdate();
 		if (remove_graph.getModel().isVertex(entity_cell))
 			remove_graph.removeCells([entity_cell]);
-	} catch {} finally {
+	} catch {
+	} finally {
 		remove_graph.getModel().endUpdate();
 	}
 	set_hierarchy_diagram(process_name, {
 		new_model: remove_graph.getModel()
 	});
+}
+
+function validate_cell_type(cell_type) {
+	/**
+	 * Validates cell type
+	 * @param {String} cell_type Type of cell
+	 * @throws Exception if invalid cell type
+	 */
+	let valid_cell_types = ["entity", "process", "datastore"];
+	if (!valid_cell_types.includes(cell_type))
+		throw `Invalid cell_type: ${cell_type}. Must be in ${valid_cell_types}.`;
 }

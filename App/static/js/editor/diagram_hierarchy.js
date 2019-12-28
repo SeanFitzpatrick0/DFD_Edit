@@ -63,7 +63,8 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	try {
 		let existing_diagram = get_hierarchy_diagram(name);
 		found_diagram = true;
-	} catch {} finally {
+	} catch {
+	} finally {
 		if (found_diagram)
 			throw `Error: Diagram ${name} already exists in hierarchy.`;
 	}
@@ -145,10 +146,7 @@ function get_hierarchy_diagram(name) {
 	return search_hierarchy;
 }
 
-function set_hierarchy_diagram(name, {
-	new_name = null,
-	new_model = null
-}) {
+function set_hierarchy_diagram(name, { new_name = null, new_model = null }) {
 	/**
 	 * Gets new values for diagram in hierarchy.
 	 * @param  {String} name Name of diagram to set.
@@ -193,7 +191,7 @@ function _remove_diagram_hierarchy_helper(sub_hierarchy, search_name) {
 	 * @param  {Object} sub_hierarchy Hierarchy being searched.
 	 * @param  {String} name Name of diagram hierarchy to remove.
 	 */
-	// Filter out hierarchy to remove 
+	// Filter out hierarchy to remove
 	sub_hierarchy.children = sub_hierarchy.children.filter(child => {
 		if (child.name != search_name) {
 			// Search each child
@@ -215,7 +213,10 @@ function switch_graph(event) {
 	event.stopPropagation();
 
 	// Get hierarchy items
-	let [current_hierarchy_item, current_graph_name] = get_active_hierarchy_item_and_name();
+	let [
+		current_hierarchy_item,
+		current_graph_name
+	] = get_active_hierarchy_item_and_name();
 	let target_hierarchy_item = event.target;
 	/* get list item if title clicked */
 	if (target_hierarchy_item.classList.contains("hierarchy_item_title"))
@@ -245,18 +246,10 @@ function add_diagram_button_handler() {
 	 * Add sub-diagram button handler.
 	 * Adds new sub-diagram for selected process.
 	 */
-
-	// Update model of current graph
-	let current_graph_name = get_active_hierarchy_item_and_name()[1];
-	set_hierarchy_diagram(current_graph_name, {
-		new_model: editor.graph.getModel()
-	});
-
 	// Get item name
 	let item_name = document.getElementById("item_configurations_title")
 		.innerText;
-	let item_id = document.getElementById("item_configurations_id")
-		.innerText;
+	let item_id = document.getElementById("item_configurations_id").innerText;
 	// Get parent name
 	let parent_name = document
 		.getElementsByClassName("diagram_active")[0]
@@ -265,7 +258,16 @@ function add_diagram_button_handler() {
 	add_to_hierarchy(item_name, parent_name, item_id);
 
 	// Add any connected entities into sub process
-	add_entities(item_name, parent_name);
+	let current_graph_name = get_active_hierarchy_item_and_name()[1];
+	let current_graph = get_hierarchy_diagram(current_graph_name).graph_model;
+
+	/* Find that process in current graph */
+	let process_cell = find_cell_in_graph(current_graph, item_name, "process");
+
+	/* Find the connected entities */
+	let connected_entities = find_connecting_cells(process_cell, "entity");
+	connected_entities
+		.forEach(entity => add_entity(entity, item_name, new Set()));
 }
 
 function get_active_hierarchy_item_and_name() {
