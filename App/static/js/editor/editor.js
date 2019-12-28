@@ -52,8 +52,15 @@ function main(editor_path, loaded_hierarchy) {
 
 		create_hierarchy(loaded_hierarchy);
 
-		// Add cell select event listener
-		editor.graph.getSelectionModel().addListener(mxEvent.CHANGE, graph_select);
+		// Add graph change event listener
+		editor.graph.getSelectionModel().addListener(mxEvent.CHANGE, (sender, event) => {
+			// Handel graph selection
+			graph_select(sender, event);
+
+			// Save change to diagram hierarchy data structure
+			let active_graph_name = get_active_hierarchy_item_and_name()[1];
+			save_current_graph(active_graph_name);
+		});
 
 		// Add cell delete event listener
 		editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
@@ -228,10 +235,16 @@ function graph_delete(sender, event) {
 	const GRAPH_SWITCH_UPDATE_LEVEL = 2;
 	if (sender.getModel().updateLevel != GRAPH_SWITCH_UPDATE_LEVEL) {
 
-		// Check if cell has sub processes
 		let cells = event.getProperty('cells')
 		let remove_cells_with_subprocess = [];
 		cells.forEach(cell => {
+			// Handel deleting entity
+			if (cell.item_type == "entity") {
+				let active_graph_name = get_active_hierarchy_item_and_name()[1];
+				remove_entity(cell.value, active_graph_name, new Set());
+			}
+
+			// Check if cell has sub processes
 			let process_title = cell.value;
 			try {
 				let found_hierarchy = get_hierarchy_diagram(process_title);
@@ -366,6 +379,6 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 		CONTAINER_STYLE
 	);
 
-	container.item_title = item_type;
+	container.item_type = item_type;
 	return container;
 }

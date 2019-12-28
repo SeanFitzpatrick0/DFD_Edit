@@ -72,6 +72,7 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	let empty_graph_model = new mxGraph().getModel();
 	let entry = {
 		process_id: process_id,
+		parent_name: parent_name,
 		name: name,
 		graph_model: empty_graph_model,
 		children: []
@@ -227,16 +228,16 @@ function switch_graph(event) {
 		"hierarchy_item_title"
 	)[0].innerText;
 
+	// Swap active class
+	current_hierarchy_item.classList.remove("diagram_active");
+	target_hierarchy_item.classList.add("diagram_active");
+
 	// Save current graph
 	save_current_graph(current_graph_name);
 
 	// Update editor graph
 	let target_graph = get_hierarchy_diagram(target_graph_name).graph_model;
 	update_editor_graph(target_graph);
-
-	// Swap active class
-	current_hierarchy_item.classList.remove("diagram_active");
-	target_hierarchy_item.classList.add("diagram_active");
 }
 
 function add_diagram_button_handler() {

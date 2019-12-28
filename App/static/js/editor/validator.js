@@ -75,9 +75,9 @@ function add_entities(process_name, parent_name) {
 	/* find all connected entities */
 	if (process_cell.edges)
 		process_cell.edges.forEach(edge => {
-			if (edge.source.item_title == "entity")
+			if (edge.source.item_type == "entity")
 				entities.push(edge.source);
-			else if (edge.target.item_title == "entity")
+			else if (edge.target.item_type == "entity")
 				entities.push(edge.target);
 		});
 
@@ -85,4 +85,60 @@ function add_entities(process_name, parent_name) {
 	let sub_graph = get_hierarchy_diagram(process_name).graph_model;
 	let parent = sub_graph.getChildAt(sub_graph.getRoot(), 0);
 	entities.forEach(entity => sub_graph.add(parent, entity.clone()));
+}
+
+function remove_entity(entity_name, process_name, visited) {
+	/**
+	 * Recursively removes all occurrences of an entity in the DFD
+	 * @param  {String} entity_name Name of the entity to remove
+	 * @param  {String} process_name Name of the process to remove the entity from
+	 * @param  {Set}    visited Set of the names of already visited processes
+	 */
+
+	// Exit is already visited process
+	if (visited.has(process_name)) return;
+	visited.add(process_name);
+
+	// Remove entity from parent process
+	let process = get_hierarchy_diagram(process_name);
+	if (process.parent_name)
+		remove_entity(entity_name, process.parent_name, visited);
+
+	// Remove entity from children processes
+	/* find entity cell in graph */
+	let current_graph = process.graph_model;
+	let entity_cell = null;
+	for (key in current_graph.cells)
+		if (current_graph.cells[key].value == entity_name)
+			entity_cell = current_graph.cells[key];
+
+	/* find all connected processes */
+	let connected_processes = [];
+	if (entity_cell.edges)
+		entity_cell.edges.forEach(edge => {
+			if (edge.source.item_type == "process")
+				connected_processes.push(edge.source);
+			else if (edge.target.item_type == "process")
+				connected_processes.push(edge.target);
+		});
+
+	connected_processes.forEach((process) => {
+		try {
+			get_hierarchy_diagram(process.value); // Check if has sub process
+			remove_entity(entity_name, process.value, visited);
+		} catch {}
+	});
+
+	// Remove entity from current process
+	let remove_graph = new mxGraph(null, current_graph);
+	try {
+		remove_graph.getModel().beginUpdate();
+		if (remove_graph.getModel().isVertex(entity_cell))
+			remove_graph.removeCells([entity_cell]);
+	} catch {} finally {
+		remove_graph.getModel().endUpdate();
+	}
+	set_hierarchy_diagram(process_name, {
+		new_model: remove_graph.getModel()
+	});
 }
