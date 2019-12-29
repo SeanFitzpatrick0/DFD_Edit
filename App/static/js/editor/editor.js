@@ -94,7 +94,17 @@ function main(editor_path, loaded_hierarchy) {
 		mxGraphLabelChanged = mxGraph.prototype.labelChanged;
 		mxGraph.prototype.labelChanged = is_valid_label_change;
 		/* event handler */
-		editor.graph.addListener(mxEvent.LABEL_CHANGED, update_process_name);
+		// TODO add update for flow labels
+		editor.graph.addListener(mxEvent.LABEL_CHANGED, (sender, event) => {
+			[
+				["process", update_process_name],
+				["entity", update_entity_name]
+			].forEach(inputs => {
+				let [item_type, update_function] = inputs;
+				if (event.getProperty("cell").item_type == item_type)
+					update_function(sender, event);
+			});
+		});
 	}
 }
 
@@ -271,7 +281,7 @@ function graph_delete(sender, event) {
 			// Handel deleting entity
 			if (cell.item_type == "entity") {
 				let active_graph_name = get_active_hierarchy_item_and_name()[1];
-				remove_entity(cell.value, active_graph_name, new Set());
+				remove_entity(cell.value);
 			}
 
 			// Check if cell has sub processes

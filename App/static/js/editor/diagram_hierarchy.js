@@ -288,40 +288,6 @@ function get_active_hierarchy_item_and_name() {
 	return [active_hierarchy_item, active_graph_name];
 }
 
-function update_process_name(sender, event) {
-	/**
-	 * Handles process name change. Update value is validate before executing the event.
-	 * Updates the name of the process in the hierarchy data structure and hierarchy html list
-	 * @param {Object} sender Sender of the event
-	 * @param {Object} event Label changed event
-	 */
-	let previous_name = event.getProperty("old");
-	let new_name = event.getProperty("value");
-
-	// Check if process is in diagram hierarchy
-	let process = null;
-	try {
-		process = get_hierarchy_diagram(previous_name);
-	} catch {
-		return;
-	}
-
-	// Update process details
-	set_hierarchy_diagram(previous_name, { new_name });
-
-	// Update hierarchy item
-	let hierarchy_item_id =
-		previous_name.replace(/[ ]/g, "_") + "_hierarchy_item";
-	let list_item = document.getElementById(hierarchy_item_id);
-	let list_item_title = list_item.getElementsByClassName(
-		"hierarchy_item_title"
-	)[0];
-	/* update item id */
-	list_item.id = new_name.replace(/[ ]/g, "_") + "_hierarchy_item";
-	/* update name */
-	list_item_title.innerText = new_name;
-}
-
 function is_process_in_hierarchy(process_name, sub_hierarchy) {
 	/**
 	 * Recursively searches for a process cell in the DFD.
@@ -343,4 +309,26 @@ function is_process_in_hierarchy(process_name, sub_hierarchy) {
 
 	// Process not in hierarchy
 	return null;
+}
+
+function find_all_entity_occurrences(name, sub_hierarchy) {
+	/**
+	 * Recursively searches for the graphs that the entity is in.
+	 * @param  {String} name The new name of the entity
+	 * @param  {Object} sub_hierarchy The current hierarchy being searched
+	 * @return {Set}  A set with the names of all processes that the entity is in
+	 */
+	let occurrences = new Set();
+
+	// Search children
+	sub_hierarchy.children.forEach(child => {
+		let search_result = find_all_entity_occurrences(name, child);
+		if (search_result.size > 0) occurrences.add(...search_result);
+	});
+
+	// Search current graph
+	if (find_cell_in_graph(sub_hierarchy.graph_model, name, "entity"))
+		occurrences.add(sub_hierarchy.name);
+
+	return occurrences;
 }

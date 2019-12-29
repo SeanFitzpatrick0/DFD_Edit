@@ -97,50 +97,32 @@ function add_entity(entity_cell, process_name, visited) {
 	current_graph.add(parent, entity_cell.clone());
 }
 
-function remove_entity(entity_name, process_name, visited) {
+function remove_entity(entity_name) {
 	/**
-	 * Recursively removes all occurrences of an entity in the DFD
+	 * Removes all occurrences of an entity in the DFD
 	 * @param  {String} entity_name Name of the entity to remove
-	 * @param  {String} process_name Name of the process to remove the entity from
-	 * @param  {Set}    visited Set of the names of already visited processes
-	 * 				Used to prevent cycles when traversing the DFD
 	 */
+	// Find all occurrences of the entity
+	let occurrences = find_all_entity_occurrences(entity_name, hierarchy);
 
-	// Exit is already visited process
-	if (visited.has(process_name)) return;
-	visited.add(process_name);
+	// Remove all entities
+	occurrences.forEach(occurrence => {
+		let graph = get_hierarchy_diagram(occurrence).graph_model;
+		let cell = find_cell_in_graph(graph, entity_name, "entity");
 
-	// Remove entity from parent process
-	let process = get_hierarchy_diagram(process_name);
-	if (process.parent_name)
-		remove_entity(entity_name, process.parent_name, visited);
-
-	// Remove entity from children processes
-	/* find entity cell in graph */
-	let current_graph = process.graph_model;
-	let entity_cell = find_cell_in_graph(current_graph, entity_name, "entity");
-
-	/* find all connected processes */
-	let connected_processes = find_connecting_cells(entity_cell, "process");
-	connected_processes.forEach(process => {
+		/* Remove entity from current graph */
+		let remove_graph = new mxGraph(null, graph);
 		try {
-			get_hierarchy_diagram(process.value); // Check if has sub process
-			remove_entity(entity_name, process.value, visited);
-		} catch {}
-	});
-
-	// Remove entity from current process
-	let remove_graph = new mxGraph(null, current_graph);
-	try {
-		remove_graph.getModel().beginUpdate();
-		if (remove_graph.getModel().isVertex(entity_cell))
-			remove_graph.removeCells([entity_cell]);
-	} catch {
-	} finally {
-		remove_graph.getModel().endUpdate();
-	}
-	set_hierarchy_diagram(process_name, {
-		new_model: remove_graph.getModel()
+			remove_graph.getModel().beginUpdate();
+			if (remove_graph.getModel().isVertex(cell))
+				remove_graph.removeCells([cell]);
+		} catch {
+		} finally {
+			remove_graph.getModel().endUpdate();
+		}
+		set_hierarchy_diagram(occurrence, {
+			new_model: remove_graph.getModel()
+		});
 	});
 }
 
@@ -163,20 +145,26 @@ function is_valid_label_change(cell, value, evt) {
 	 * @param {Object} event Label edit event
 	 */
 	// Validate process label change
-	if (cell.item_type == "process") {
-		let validation_result = is_valid_process_name(value);
-		if (validation_result[0]) mxGraphLabelChanged.apply(this, arguments);
-		else alert(`Error: ${validation_result[1]}`);
-	} else mxGraphLabelChanged.apply(this, arguments);
-	// TODO validate entity label change
 	// TODO validate flow label change
+	[
+		["process", is_valid_process_name],
+		["entity", is_valid_entity_name]
+	].forEach(inputs => {
+		let [item_type, validation_function] = inputs;
+		if (cell.item_type == item_type) {
+			let validation_result = validation_function(value);
+			if (validation_result[0])
+				mxGraphLabelChanged.apply(this, arguments);
+			else alert(`Error: ${validation_result[1]}`);
+		}
+	});
 }
 
 function is_valid_process_name(name) {
 	/**
 	 * Determines if valid new process name
 	 * @param  {String} name The new name of the process
-	 * @return {Boolean} If the new name valid
+	 * @return {Boolean} If the new name is valid
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate name input
@@ -192,4 +180,73 @@ function is_valid_process_name(name) {
 		];
 
 	return [true];
+}
+
+function is_valid_entity_name(name) {
+	/**
+	 * Determines if valid new entity name
+	 * @param  {String} name The new name of the process
+	 * @return {Boolean} If the new name is valid
+	 * @return {String}  Error message if not valid
+	 */
+	// TODO clarify if going to allow multiple entity names
+	// Validate name input
+	if (!name || name.length == 0)
+		return [false, "Unable to have null or empty name"];
+	return [true];
+}
+
+function update_process_name(sender, event) {
+	/**
+	 * Handles process name change. Update value is validate before executing the event.
+	 * Updates the name of the process in the hierarchy data structure and hierarchy html list
+	 * @param {Object} sender Sender of the event
+	 * @param {Object} event Label changed event
+	 */
+	let previous_name = event.getProperty("old");
+	let new_name = event.getProperty("value");
+
+	// Check if process is in diagram hierarchy
+	let process = null;
+	try {
+		process = get_hierarchy_diagram(previous_name);
+	} catch {
+		return;
+	}
+
+	// Update process details
+	set_hierarchy_diagram(previous_name, { new_name });
+
+	// Update hierarchy item
+	let hierarchy_item_id =
+		previous_name.replace(/[ ]/g, "_") + "_hierarchy_item";
+	let list_item = document.getElementById(hierarchy_item_id);
+	let list_item_title = list_item.getElementsByClassName(
+		"hierarchy_item_title"
+	)[0];
+	/* update item id */
+	list_item.id = new_name.replace(/[ ]/g, "_") + "_hierarchy_item";
+	/* update name */
+	list_item_title.innerText = new_name;
+}
+
+function update_entity_name(sender, event) {
+	/**
+	 * Handles entity name change. Update value is validate before executing the event.
+	 * Updates the name of the entity in DFD
+	 * @param {Object} sender Sender of the event
+	 * @param {Object} event Label changed event
+	 */
+	let new_name = event.getProperty("value");
+	let old_name = event.getProperty("old");
+
+	// Find all occurrences of the entity
+	let occurrences = find_all_entity_occurrences(old_name, hierarchy);
+
+	// Change name of all entities
+	occurrences.forEach(occurrence => {
+		let graph = get_hierarchy_diagram(occurrence).graph_model;
+		let cell = find_cell_in_graph(graph, old_name, "entity");
+		cell.value = new_name;
+	});
 }
