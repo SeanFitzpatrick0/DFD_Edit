@@ -154,3 +154,42 @@ function validate_cell_type(cell_type) {
 	if (!valid_cell_types.includes(cell_type))
 		throw `Invalid cell_type: ${cell_type}. Must be in ${valid_cell_types}.`;
 }
+
+function is_valid_label_change(cell, value, evt) {
+	/**
+	 * Validates a cell label change. Executes the event if valid, alerts the user if not
+	 * @param {Object} cell The cell being edited
+	 * @param {String} value The new value of the cell
+	 * @param {Object} event Label edit event
+	 */
+	// Validate process label change
+	if (cell.item_type == "process") {
+		let validation_result = is_valid_process_name(value);
+		if (validation_result[0]) mxGraphLabelChanged.apply(this, arguments);
+		else alert(`Error: ${validation_result[1]}`);
+	} else mxGraphLabelChanged.apply(this, arguments);
+	// TODO validate entity label change
+	// TODO validate flow label change
+}
+
+function is_valid_process_name(name) {
+	/**
+	 * Determines if valid new process name
+	 * @param  {String} name The new name of the process
+	 * @return {Boolean} If the new name valid
+	 * @return {String}  Error message if not valid
+	 */
+	// Validate name input
+	if (!name || name.length == 0)
+		return [false, "Unable to have null or empty name"];
+
+	// Validate is not already in DFD
+	let search_result = is_process_in_hierarchy(name, hierarchy);
+	if (search_result)
+		return [
+			false,
+			`Process with name ${name} already exists in ${search_result}`
+		];
+
+	return [true];
+}

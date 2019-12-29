@@ -58,6 +58,7 @@ function main(editor_path, loaded_hierarchy) {
 		create_hierarchy(loaded_hierarchy);
 
 		// Add graph change event listener
+		// TODO refactor this event handler
 		editor.graph
 			.getSelectionModel()
 			.addListener(mxEvent.CHANGE, (sender, event) => {
@@ -87,6 +88,13 @@ function main(editor_path, loaded_hierarchy) {
 
 		// Add cell delete event listener
 		editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
+
+		// Add cell edit event listener
+		/* validation check before calling event */
+		mxGraphLabelChanged = mxGraph.prototype.labelChanged;
+		mxGraph.prototype.labelChanged = is_valid_label_change;
+		/* event handler */
+		editor.graph.addListener(mxEvent.LABEL_CHANGED, update_process_name);
 	}
 }
 

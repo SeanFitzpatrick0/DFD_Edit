@@ -266,8 +266,9 @@ function add_diagram_button_handler() {
 
 	/* Find the connected entities */
 	let connected_entities = find_connecting_cells(process_cell, "entity");
-	connected_entities
-		.forEach(entity => add_entity(entity, item_name, new Set()));
+	connected_entities.forEach(entity =>
+		add_entity(entity, item_name, new Set())
+	);
 }
 
 function get_active_hierarchy_item_and_name() {
@@ -285,4 +286,61 @@ function get_active_hierarchy_item_and_name() {
 	)[0].innerText;
 
 	return [active_hierarchy_item, active_graph_name];
+}
+
+function update_process_name(sender, event) {
+	/**
+	 * Handles process name change. Update value is validate before executing the event.
+	 * Updates the name of the process in the hierarchy data structure and hierarchy html list
+	 * @param {Object} sender Sender of the event
+	 * @param {Object} event Label changed event
+	 */
+	let previous_name = event.getProperty("old");
+	let new_name = event.getProperty("value");
+
+	// Check if process is in diagram hierarchy
+	let process = null;
+	try {
+		process = get_hierarchy_diagram(previous_name);
+	} catch {
+		return;
+	}
+
+	// Update process details
+	set_hierarchy_diagram(previous_name, { new_name });
+
+	// Update hierarchy item
+	let hierarchy_item_id =
+		previous_name.replace(/[ ]/g, "_") + "_hierarchy_item";
+	let list_item = document.getElementById(hierarchy_item_id);
+	let list_item_title = list_item.getElementsByClassName(
+		"hierarchy_item_title"
+	)[0];
+	/* update item id */
+	list_item.id = new_name.replace(/[ ]/g, "_") + "_hierarchy_item";
+	/* update name */
+	list_item_title.innerText = new_name;
+}
+
+function is_process_in_hierarchy(process_name, sub_hierarchy) {
+	/**
+	 * Recursively searches for a process cell in the DFD.
+	 * @param   {String} process_name Sender of the event
+	 * @param   {Object} sub_hierarchy Current hierarchy entry being searched
+	 * @returns {String} The name of the diagram the process is in
+	 */
+	// Is process in current graph
+	let current_graph = sub_hierarchy.graph_model;
+	if (find_cell_in_graph(current_graph, process_name, "process"))
+		return sub_hierarchy.name;
+	else {
+		// Search for process in children
+		sub_hierarchy.children.forEach(child => {
+			let search_result = is_process_in_hierarchy(process_name, child);
+			if (search_result) return search_result;
+		});
+	}
+
+	// Process not in hierarchy
+	return null;
 }
