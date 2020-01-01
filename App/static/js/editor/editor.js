@@ -357,7 +357,10 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 	const item_type = "process";
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
-	node.setAttribute("label", item_type);
+	node.setAttribute(
+		"label",
+		`${item_type}_${Math.floor(Math.random() * 1000)}`
+	);
 
 	let container = graph.insertVertex(
 		parent,
@@ -396,7 +399,10 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	const item_type = "datastore";
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
-	node.setAttribute("label", item_type);
+	node.setAttribute(
+		"label",
+		`${item_type}_${Math.floor(Math.random() * 1000)}`
+	);
 
 	let container = graph.insertVertex(
 		parent,
@@ -430,7 +436,10 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 	const item_type = "entity";
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
-	node.setAttribute("label", item_type);
+	node.setAttribute(
+		"label",
+		`${item_type}_${Math.floor(Math.random() * 1000)}`
+	);
 
 	let container = graph.insertVertex(
 		parent,
