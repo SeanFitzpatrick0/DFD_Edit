@@ -297,18 +297,19 @@ function is_process_in_hierarchy(process_name, sub_hierarchy) {
 	 */
 	// Is process in current graph
 	let current_graph = sub_hierarchy.graph_model;
+	let found = null;
 	if (find_cell_in_graph(current_graph, process_name, "process"))
 		return sub_hierarchy.name;
 	else {
 		// Search for process in children
 		sub_hierarchy.children.forEach(child => {
 			let search_result = is_process_in_hierarchy(process_name, child);
-			if (search_result) return search_result;
+			if (search_result) found = search_result;
 		});
 	}
 
 	// Process not in hierarchy
-	return null;
+	return found;
 }
 
 function find_all_entity_occurrences(name, sub_hierarchy) {
@@ -323,7 +324,8 @@ function find_all_entity_occurrences(name, sub_hierarchy) {
 	// Search children
 	sub_hierarchy.children.forEach(child => {
 		let search_result = find_all_entity_occurrences(name, child);
-		if (search_result.size > 0) occurrences.add(...search_result);
+		if (search_result.size > 0)
+			occurrences = new Set([...occurrences, ...search_result]);
 	});
 
 	// Search current graph

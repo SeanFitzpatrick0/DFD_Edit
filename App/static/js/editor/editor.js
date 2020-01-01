@@ -1,11 +1,11 @@
 // Global variables
 // TODO move globals to own file
-// TODO prevent graph items from resize
 var editor;
 var hierarchy = {};
 
 // Global styles
-// TODO prevent connectable
+// TODO prevent ID connectable
+// TODO prevent graph items from resize
 const ID_PERMISSION =
 	"editable=0;movable=0;resizable=0;cloneable=0;deletable=0;";
 const CONTAINER_STYLE =
@@ -105,6 +105,17 @@ function main(editor_path, loaded_hierarchy) {
 					update_function(sender, event);
 			});
 		});
+
+		// Set flow and cell validation rules
+		set_validation_rules();
+
+		// Overwrite cell value to string function
+		editor.graph.convertValueToString = cell => {
+			// If the cell value is xml data, return the `label` attribute
+			if (mxUtils.isNode(cell.value))
+				return cell.getAttribute("label", "");
+			else return cell.value;
+		};
 	}
 }
 
@@ -118,8 +129,8 @@ function create_editor(editor_config_path, graph_container) {
 
 	// Create editor with key handler config
 	mxObjectCodec.allowEval = true;
-	var editor_config = mxUtils.load(editor_config_path).getDocumentElement();
-	var editor = new mxEditor(editor_config);
+	let editor_config = mxUtils.load(editor_config_path).getDocumentElement();
+	let editor = new mxEditor(editor_config);
 	mxObjectCodec.allowEval = false;
 	editor.setGraphContainer(graph_container);
 
@@ -250,7 +261,7 @@ function graph_select(sender, event) {
 		/* Add item title */
 		let item_title = document.getElementById("item_configurations_title");
 		let item_id = document.getElementById("item_configurations_id");
-		item_title.innerHTML = cell.value;
+		item_title.innerHTML = cell.value.getAttribute("label");
 		item_id.innerHTML = cell.children[0].value;
 
 		/* Show menu */
@@ -279,13 +290,11 @@ function graph_delete(sender, event) {
 		let remove_cells_with_subprocess = [];
 		cells.forEach(cell => {
 			// Handel deleting entity
-			if (cell.item_type == "entity") {
-				let active_graph_name = get_active_hierarchy_item_and_name()[1];
-				remove_entity(cell.value);
-			}
+			if (cell.item_type == "entity")
+				remove_entity(cell.value.getAttribute("label"));
 
 			// Check if cell has sub processes
-			let process_title = cell.value;
+			let process_title = editor.graph.convertValueToString(cell);
 			try {
 				let found_hierarchy = get_hierarchy_diagram(process_title);
 				remove_cells_with_subprocess.push(found_hierarchy.name);
@@ -344,11 +353,16 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds process item to graph
 	 */
+	/* Create xml process element */
 	const item_type = "process";
+	let doc = mxUtils.createXmlDocument();
+	let node = doc.createElement(item_type);
+	node.setAttribute("label", item_type);
+
 	let container = graph.insertVertex(
 		parent,
 		null,
-		item_type,
+		node,
 		x,
 		y,
 		dimensions.width,
@@ -378,11 +392,16 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds datastore to graph
 	 */
+	/* Create xml datastore element */
 	const item_type = "datastore";
+	let doc = mxUtils.createXmlDocument();
+	let node = doc.createElement(item_type);
+	node.setAttribute("label", item_type);
+
 	let container = graph.insertVertex(
 		parent,
 		null,
-		item_type,
+		node,
 		x,
 		y,
 		dimensions.width,
@@ -409,10 +428,14 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 	 * Adds entity to graph
 	 */
 	const item_type = "entity";
+	let doc = mxUtils.createXmlDocument();
+	let node = doc.createElement(item_type);
+	node.setAttribute("label", item_type);
+
 	let container = graph.insertVertex(
 		parent,
 		null,
-		item_type,
+		node,
 		x,
 		y,
 		dimensions.width,
@@ -440,7 +463,7 @@ function find_cell_in_graph(graph, cell_name, cell_type) {
 	for (key in graph.cells)
 		if (
 			graph.cells[key].item_type == cell_type &&
-			graph.cells[key].value == cell_name
+			graph.cells[key].value.getAttribute("label") == cell_name
 		)
 			return graph.cells[key];
 	return null;
@@ -462,7 +485,8 @@ function find_connecting_cells(cell, cell_type) {
 		["target", "source"].forEach(direction => {
 			if (
 				edge[direction].item_type == cell_type &&
-				(edge[direction].name != cell.value ||
+				(edge[direction].getAttribute("label") !=
+					cell.value.getAttribute("label") ||
 					edge[direction].item_title != cell_type)
 			)
 				connected_cells.push(edge[direction]);

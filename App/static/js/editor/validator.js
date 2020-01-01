@@ -43,7 +43,7 @@ function update_process_ids(parent_id, graph) {
 
 			// Update process id in hierarch data structure
 			try {
-				let process_name = cell.value;
+				let process_name = editor.graph.convertValueToString(cell);
 				let process = get_hierarchy_diagram(process_name);
 				process.process_id = new_id;
 
@@ -82,8 +82,12 @@ function add_entity(entity_cell, process_name, visited) {
 	sub_processes.forEach(process => {
 		// Add entity to subprocess if exists
 		try {
-			get_hierarchy_diagram(process.value);
-			add_entity(entity_cell, process.value, visited);
+			get_hierarchy_diagram(process.value.getAttribute("label"));
+			add_entity(
+				entity_cell,
+				process.value.getAttribute("label"),
+				visited
+			);
 		} catch {}
 	});
 
@@ -91,7 +95,14 @@ function add_entity(entity_cell, process_name, visited) {
 	let current_graph = process.graph_model;
 
 	/* Check if entity is already in the graph */
-	if (find_cell_in_graph(current_graph, entity_cell.value, "entity")) return;
+	if (
+		find_cell_in_graph(
+			current_graph,
+			entity_cell.value.getAttribute("label"),
+			"entity"
+		)
+	)
+		return;
 
 	let parent = current_graph.getChildAt(current_graph.getRoot(), 0);
 	current_graph.add(parent, entity_cell.clone());
@@ -153,9 +164,17 @@ function is_valid_label_change(cell, value, evt) {
 		let [item_type, validation_function] = inputs;
 		if (cell.item_type == item_type) {
 			let validation_result = validation_function(value);
-			if (validation_result[0])
+			if (validation_result[0]) {
+				if (mxUtils.isNode(cell.value)) {
+					// Clones the value for correct undo/redo
+					var elt = cell.value.cloneNode(true);
+					elt.setAttribute("label", value);
+					value = elt;
+				}
 				mxGraphLabelChanged.apply(this, arguments);
-			else alert(`Error: ${validation_result[1]}`);
+			} else {
+				alert(`Error: ${validation_result[1]}`);
+			}
 		}
 	});
 }
@@ -237,8 +256,8 @@ function update_entity_name(sender, event) {
 	 * @param {Object} sender Sender of the event
 	 * @param {Object} event Label changed event
 	 */
-	let new_name = event.getProperty("value");
-	let old_name = event.getProperty("old");
+	let new_name = event.getProperty("value").getAttribute("label");
+	let old_name = event.getProperty("old").getAttribute("label");
 
 	// Find all occurrences of the entity
 	let occurrences = find_all_entity_occurrences(old_name, hierarchy);
@@ -247,6 +266,93 @@ function update_entity_name(sender, event) {
 	occurrences.forEach(occurrence => {
 		let graph = get_hierarchy_diagram(occurrence).graph_model;
 		let cell = find_cell_in_graph(graph, old_name, "entity");
-		cell.value = new_name;
+		cell.value.setAttribute("label", new_name);
 	});
+}
+
+function set_validation_rules() {
+	/**
+	 * Sets validation rules for flows and set graph validation on change listener
+	 */
+	// A flow can't directly connect 2 entities
+	editor.graph.multiplicities.push(
+		new mxMultiplicity(
+			false,
+			"entity",
+			null,
+			null,
+			null,
+			null,
+			["entity"],
+			null,
+			"Data cannot move directly from a source entity to a sink entity." +
+				" It must be moved by a process.",
+			false
+		)
+	);
+
+	// A process must have at least one in flow of data
+	editor.graph.multiplicities.push(
+		new mxMultiplicity(
+			false,
+			"process",
+			null,
+			null,
+			1,
+			null,
+			null,
+			"A process must have at least one in flow of data."
+		)
+	);
+
+	// A process must have at least one out flow of data
+	editor.graph.multiplicities.push(
+		new mxMultiplicity(
+			true,
+			"process",
+			null,
+			null,
+			1,
+			null,
+			null,
+			"A process must have at least one out flow of data."
+		)
+	);
+
+	// A flow can't move data from a datastore to a entity
+	editor.graph.multiplicities.push(
+		new mxMultiplicity(
+			true,
+			"datastore",
+			null,
+			null,
+			null,
+			null,
+			["entity"],
+			null,
+			"A data flow can't move directly from a data store to a entity." +
+				" This data must be moved using a process.",
+			false
+		)
+	);
+
+	// A flow can't move data from a entity to a datastore
+	editor.graph.multiplicities.push(
+		new mxMultiplicity(
+			false,
+			"datastore",
+			null,
+			null,
+			null,
+			null,
+			["entity"],
+			null,
+			"A data flow can't move directly from a data store to a entity." +
+				" This data must be moved using a process.",
+			false
+		)
+	);
+
+	// Validates graph on every change event
+	editor.validating = true;
 }
