@@ -353,6 +353,13 @@ function set_validation_rules() {
 		)
 	);
 
+	// All items must have at least one connections
+	mxGraph.prototype.validateCell = (cell, context) => {
+		if (mxUtils.isNode(cell.value) && !cell.edges)
+			return "Item needs to be connected with a flow.";
+		return null;
+	};
+
 	// Validates graph on every change event
 	editor.validating = true;
 }
