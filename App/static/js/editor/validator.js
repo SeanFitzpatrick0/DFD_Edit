@@ -24,7 +24,8 @@ function create_id(parent_id, id_ending, item_type) {
 		id_ending = item_cells.length + 1;
 	}
 
-	if (parent_id == "0") return id_ending.toString();
+	if (parent_id == "0")
+		return `${item_type == "datastore" ? "D" : ""}${id_ending}`;
 	else
 		return `${
 			item_type == "datastore" ? "D" : ""
