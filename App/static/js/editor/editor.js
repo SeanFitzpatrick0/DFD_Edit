@@ -23,7 +23,7 @@ const process_dimensions = {
 	height: 120
 };
 const datastore_dimensions = {
-	width: 120,
+	width: 140,
 	height: 60
 };
 
@@ -315,13 +315,13 @@ function graph_delete(sender, event) {
 			remove_from_hierarchy(process_name);
 		});
 
-		// Update process id's when deleted
+		// Update id's when deleted
 		/* Gets the text of the active diagram list item and 
 		selects the first line as there will be multiple lines if it has nested list items */
 		let current_graph_name = get_active_hierarchy_item_and_name()[1];
 		let current_graph_id = get_hierarchy_diagram(current_graph_name)
 			.process_id;
-		update_process_ids(current_graph_id, editor.graph.getModel());
+		update_ids(current_graph_id, editor.graph.getModel());
 	}
 
 	event.consume();
@@ -388,7 +388,7 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 	let id = graph.insertVertex(
 		container,
 		null,
-		create_process_id(active_graph_id),
+		create_id(active_graph_id, null, "process"),
 		0,
 		0,
 		dimensions.width,
@@ -423,13 +423,17 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height,
 		CONTAINER_STYLE
 	);
+
+	let active_graph_name = get_active_hierarchy_item_and_name()[1];
+	let active_graph_id = get_hierarchy_diagram(active_graph_name).process_id;
+
 	let id = graph.insertVertex(
 		container,
 		null,
-		"ID",
+		create_id(active_graph_id, null, "datastore"),
 		0,
 		0,
-		dimensions.width / 5,
+		dimensions.width / 4,
 		dimensions.height,
 		ID_STYLE
 	);

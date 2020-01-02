@@ -1,58 +1,72 @@
-function create_process_id(parent_id, id_ending) {
+function create_id(parent_id, id_ending, item_type) {
 	/**
 	 * Creates the ID for a new process
 	 * @param  {String} parent_id ID of the parent graph.
 	 *                          Null if creating ID for system process.
 	 * @param  {Integer} id_ending (Optional) The number ending for the ID.
+	 * @param  {String}  item_type The type of the item reciveing a ID.
+	 * 							Either 'process' or 'datastore'
 	 * @return {String} New Process ID.
 	 */
 	// ID for the system process
-	if (parent_id == null) return "0";
+	if (parent_id == null)
+		if (item_type == "datastore")
+			throw "Error: A datastore ID cant be created for the context diagram the Contextual Diagram.";
+		else return "0";
 
-	// If no ending, increment number of processes
-	if (typeof id_ending === "undefined") {
+	// If no ending, increment number of that item
+	if (!id_ending) {
 		let current_graph = editor.graph.getModel();
 		let graph_cells = current_graph.cells;
-		let process_cells = [];
+		let item_cells = [];
 		for (cell in graph_cells)
-			if (graph_cells[cell].item_type == "process")
-				process_cells.push(cell);
-		id_ending = process_cells.length + 1;
+			if (graph_cells[cell].item_type == item_type) item_cells.push(cell);
+		id_ending = item_cells.length + 1;
 	}
 
 	if (parent_id == "0") return id_ending.toString();
-	else return `${parent_id}.${id_ending}`;
+	else
+		return `${
+			item_type == "datastore" ? "D" : ""
+		}${parent_id}.${id_ending}`;
 }
 
-function update_process_ids(parent_id, graph) {
+function update_ids(parent_id, graph) {
 	/**
-	 * Updates the process id's for each process and its sub processes
+	 * Updates the id's for each process and datastore and its sub processes
 	 * @param  {String} parent_id ID of the parent graph.
 	 * @param  {Object} graph MxGraph model to update
 	 */
-	let process_counter = 1;
 
-	// Update each process in the graph
-	for (key in graph.cells) {
-		let cell = graph.cells[key];
-		if (cell.item_type && cell.item_type == "process") {
-			let new_id = create_process_id(parent_id, process_counter);
+	["process", "datastore"].forEach(item_type => {
+		let counter = 1;
 
-			// Update process id in graph model
-			cell.children[0].value = new_id;
+		// Update each item in the graph
+		for (key in graph.cells) {
+			let cell = graph.cells[key];
+			if (cell.item_type == item_type) {
+				let new_id = create_id(parent_id, counter, item_type);
 
-			// Update process id in hierarch data structure
-			try {
-				let process_name = editor.graph.convertValueToString(cell);
-				let process = get_hierarchy_diagram(process_name);
-				process.process_id = new_id;
+				// Update id in graph model
+				cell.children[0].value = new_id;
 
-				// Recursively update the ids of sub processes
-				update_process_ids(process.process_id, process.graph_model);
-			} catch {}
-			process_counter++;
+				if (item_type == "process") {
+					// Update process id in hierarch data structure
+					try {
+						let process_name = editor.graph.convertValueToString(
+							cell
+						);
+						let process = get_hierarchy_diagram(process_name);
+						process.process_id = new_id;
+
+						// Recursively update the ids of sub processes
+						update_ids(process.process_id, process.graph_model);
+					} catch {}
+				}
+				counter++;
+			}
 		}
-	}
+	});
 
 	// Update changes
 	editor.graph.refresh();
