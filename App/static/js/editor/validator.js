@@ -114,7 +114,7 @@ function remove_entity(entity_name) {
 	 * @param  {String} entity_name Name of the entity to remove
 	 */
 	// Find all occurrences of the entity
-	let occurrences = find_all_entity_occurrences(entity_name, hierarchy);
+	let occurrences = find_all_occurrences(entity_name, "entity", hierarchy);
 
 	// Remove all entities
 	occurrences.forEach(occurrence => {
@@ -143,7 +143,7 @@ function validate_cell_type(cell_type) {
 	 * @param {String} cell_type Type of cell
 	 * @throws Exception if invalid cell type
 	 */
-	let valid_cell_types = ["entity", "process", "datastore"];
+	let valid_cell_types = ["entity", "process", "datastore", "flow"];
 	if (!valid_cell_types.includes(cell_type))
 		throw `Invalid cell_type: ${cell_type}. Must be in ${valid_cell_types}.`;
 }
@@ -159,11 +159,12 @@ function is_valid_label_change(cell, value, evt) {
 	// TODO validate flow label change
 	[
 		["process", is_valid_process_name],
-		["entity", is_valid_entity_name]
+		["entity", is_valid_entity_name],
+		["flow", is_valid_flow_name]
 	].forEach(inputs => {
 		let [item_type, validation_function] = inputs;
 		if (cell.item_type == item_type) {
-			let validation_result = validation_function(value);
+			let validation_result = validation_function(value, cell);
 			if (validation_result[0]) {
 				if (mxUtils.isNode(cell.value)) {
 					// Clones the value for correct undo/redo
@@ -215,6 +216,41 @@ function is_valid_entity_name(name) {
 	return [true];
 }
 
+function is_valid_flow_name(name, cell) {
+	/**
+	 * Determines if valid new flow name
+	 * @param  {String} name The new name of the process
+	 * @param  {Object} cell The flow cell being updated
+	 * @return {Boolean} If the new name is valid
+	 * @return {String}  Error message if not valid
+	 */
+	// Validate name input
+	if (!name || name.length == 0)
+		return [false, "Unable to have null or empty name"];
+
+	// Validate is not duplicate flow name
+	let found_occurrences = find_all_occurrences(name, 'flow', hierarchy);
+	for (occurrence of found_occurrences) {
+		let flow = find_cell_in_graph(
+			get_hierarchy_diagram(occurrence).graph_model,
+			name,
+			"flow"
+		);
+		if (
+			editor.graph.convertValueToString(cell.source) !=
+			editor.graph.convertValueToString(flow.source)
+		)
+			return [
+				false,
+				`A flow with the name ${name} already exists in the DFD from ${editor.graph.convertValueToString(
+					flow.source
+				)}.`
+			];
+	}
+
+	return [true];
+}
+
 function update_process_name(sender, event) {
 	/**
 	 * Handles process name change. Update value is validate before executing the event.
@@ -260,7 +296,7 @@ function update_entity_name(sender, event) {
 	let old_name = event.getProperty("old").getAttribute("label");
 
 	// Find all occurrences of the entity
-	let occurrences = find_all_entity_occurrences(old_name, hierarchy);
+	let occurrences = find_all_occurrences(old_name, "entity", hierarchy);
 
 	// Change name of all entities
 	occurrences.forEach(occurrence => {

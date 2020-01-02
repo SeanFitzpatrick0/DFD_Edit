@@ -68,6 +68,13 @@ function main(editor_path, loaded_hierarchy) {
 				// Add any updated entities
 				let cells = event.getProperty("removed") || [];
 				cells.forEach(cell => {
+					// Set edge item type and value
+					if (cell.edge && !cell.item_type) {
+						cell.item_type = "flow";
+						cell.value = `flow_${Math.floor(Math.random() * 1000)}`;
+						editor.graph.refresh();
+					}
+
 					// If edge get the connected entity
 					if (cell.source && cell.source.item_type == "entity")
 						cell = cell.source;
@@ -472,7 +479,7 @@ function find_cell_in_graph(graph, cell_name, cell_type) {
 	for (key in graph.cells)
 		if (
 			graph.cells[key].item_type == cell_type &&
-			graph.cells[key].value.getAttribute("label") == cell_name
+			editor.graph.convertValueToString(graph.cells[key]) == cell_name
 		)
 			return graph.cells[key];
 	return null;

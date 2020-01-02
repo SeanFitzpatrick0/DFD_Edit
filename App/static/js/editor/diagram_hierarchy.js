@@ -312,10 +312,11 @@ function is_process_in_hierarchy(process_name, sub_hierarchy) {
 	return found;
 }
 
-function find_all_entity_occurrences(name, sub_hierarchy) {
+function find_all_occurrences(name, type, sub_hierarchy) {
 	/**
 	 * Recursively searches for the graphs that the entity is in.
 	 * @param  {String} name The new name of the entity
+	 * @param  {String} type Type of cell being searched for
 	 * @param  {Object} sub_hierarchy The current hierarchy being searched
 	 * @return {Set}  A set with the names of all processes that the entity is in
 	 */
@@ -323,13 +324,13 @@ function find_all_entity_occurrences(name, sub_hierarchy) {
 
 	// Search children
 	sub_hierarchy.children.forEach(child => {
-		let search_result = find_all_entity_occurrences(name, child);
+		let search_result = find_all_occurrences(name, type, child);
 		if (search_result.size > 0)
 			occurrences = new Set([...occurrences, ...search_result]);
 	});
 
 	// Search current graph
-	if (find_cell_in_graph(sub_hierarchy.graph_model, name, "entity"))
+	if (find_cell_in_graph(sub_hierarchy.graph_model, name, type))
 		occurrences.add(sub_hierarchy.name);
 
 	return occurrences;
