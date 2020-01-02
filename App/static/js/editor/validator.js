@@ -174,6 +174,7 @@ function is_valid_label_change(cell, value, evt) {
 	[
 		["process", is_valid_process_name],
 		["entity", is_valid_entity_name],
+		["datastore", is_valid_datastore_name],
 		["flow", is_valid_flow_name]
 	].forEach(inputs => {
 		let [item_type, validation_function] = inputs;
@@ -206,13 +207,37 @@ function is_valid_process_name(name) {
 		return [false, "Unable to have null or empty name"];
 
 	// Validate is not already in DFD
-	let search_result = is_process_in_hierarchy(name, hierarchy);
-	if (search_result)
+	let search_result = find_all_occurrences(name, "process", hierarchy);
+	if (search_result.size > 0)
 		return [
 			false,
-			`Process with name ${name} already exists in ${search_result}`
+			`Process with name ${name}, already exists in ${Array.from(
+				search_result
+			).pop()}`
 		];
+	return [true];
+}
 
+function is_valid_datastore_name(name) {
+	/**
+	 * Determines if valid new datastore name
+	 * @param  {String} name The new name of the datastore
+	 * @return {Boolean} If the new name is valid
+	 * @return {String}  Error message if not valid
+	 */
+	// Validate name input
+	if (!name || name.length == 0)
+		return [false, "Unable to have null or empty name"];
+
+	// Validate not already in DFD
+	let search_result = find_all_occurrences(name, "datastore", hierarchy);
+	if (search_result.size > 0)
+		return [
+			false,
+			`Data store with name ${name}, already exists in ${Array.from(
+				search_result
+			).pop()}`
+		];
 	return [true];
 }
 

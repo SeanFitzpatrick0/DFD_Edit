@@ -288,30 +288,6 @@ function get_active_hierarchy_item_and_name() {
 	return [active_hierarchy_item, active_graph_name];
 }
 
-function is_process_in_hierarchy(process_name, sub_hierarchy) {
-	/**
-	 * Recursively searches for a process cell in the DFD.
-	 * @param   {String} process_name Sender of the event
-	 * @param   {Object} sub_hierarchy Current hierarchy entry being searched
-	 * @returns {String} The name of the diagram the process is in
-	 */
-	// Is process in current graph
-	let current_graph = sub_hierarchy.graph_model;
-	let found = null;
-	if (find_cell_in_graph(current_graph, process_name, "process"))
-		return sub_hierarchy.name;
-	else {
-		// Search for process in children
-		sub_hierarchy.children.forEach(child => {
-			let search_result = is_process_in_hierarchy(process_name, child);
-			if (search_result) found = search_result;
-		});
-	}
-
-	// Process not in hierarchy
-	return found;
-}
-
 function find_all_occurrences(name, type, sub_hierarchy) {
 	/**
 	 * Recursively searches for the graphs that the entity is in.
