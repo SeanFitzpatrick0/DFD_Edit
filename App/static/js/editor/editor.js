@@ -13,6 +13,7 @@ const CONTAINER_STYLE =
 const ID_STYLE =
 	"fillColor=#343a40;fontColor=white;strokeColor=#343a40;rounded=1;" +
 	ID_PERMISSION;
+const EDGE_STYLE = "edgeStyle=topToBottomEdgeStyle;";
 const entity_dimensions = {
 	width: 100,
 	height: 80
@@ -72,6 +73,7 @@ function main(editor_path, loaded_hierarchy) {
 					if (cell.edge && !cell.item_type) {
 						cell.item_type = "flow";
 						cell.value = `flow_${Math.floor(Math.random() * 1000)}`;
+						cell.style = EDGE_STYLE;
 						editor.graph.refresh();
 					}
 
