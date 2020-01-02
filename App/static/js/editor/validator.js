@@ -229,17 +229,24 @@ function is_valid_flow_name(name, cell) {
 		return [false, "Unable to have null or empty name"];
 
 	// Validate is not duplicate flow name
-	let found_occurrences = find_all_occurrences(name, 'flow', hierarchy);
+	let found_occurrences = find_all_occurrences(name, "flow", hierarchy);
 	for (occurrence of found_occurrences) {
 		let flow = find_cell_in_graph(
 			get_hierarchy_diagram(occurrence).graph_model,
 			name,
 			"flow"
 		);
-		if (
-			editor.graph.convertValueToString(cell.source) !=
-			editor.graph.convertValueToString(flow.source)
-		)
+
+		let is_same_source =
+			editor.graph.convertValueToString(cell.source) ==
+			editor.graph.convertValueToString(flow.source);
+		let is_returning_flow =
+			editor.graph.convertValueToString(flow.source) ==
+				get_active_hierarchy_item_and_name()[1] &&
+			editor.graph.convertValueToString(flow.target) ==
+				editor.graph.convertValueToString(flow.target);
+
+		if (!is_same_source && !is_returning_flow)
 			return [
 				false,
 				`A flow with the name ${name} already exists in the DFD from ${editor.graph.convertValueToString(
