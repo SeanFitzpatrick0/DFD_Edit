@@ -445,3 +445,29 @@ function set_validation_rules() {
 	// Validates graph on every change event
 	editor.validating = true;
 }
+
+function can_add_to_context_diagram(item_type) {
+	/**
+	 * Validates that the item can be placed in the context diagram
+	 * @param {String} item_type Type of the item being placed
+	 * @return {Boolean} true if valid placement, otherwise false
+	 */
+	// Is placing item in Context Diagram
+	if (get_active_hierarchy_item_and_name()[1] == "Context diagram")
+		if (item_type == "datastore") {
+			// Is item a datastore
+			alert("Data stores must not appear in the Context diagram.");
+			return false;
+		} else if (item_type == "process") {
+			// Has a process already been placed
+			let cells = editor.graph.getModel().cells;
+			for (let i in cells)
+				if (cells[i].item_type == "process") {
+					alert(
+						"Only one process can be placed in the Context diagram."
+					);
+					return false;
+				}
+		}
+	return true;
+}

@@ -362,8 +362,11 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds process item to graph
 	 */
-	/* Create xml process element */
 	const item_type = "process";
+	/* is valid placement  */
+	if (!can_add_to_context_diagram(item_type)) return null;
+
+	/* Create xml process element */
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
 	node.setAttribute(
@@ -404,8 +407,11 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	/**
 	 * Adds datastore to graph
 	 */
-	/* Create xml datastore element */
 	const item_type = "datastore";
+	/* is valid placement  */
+	if (!can_add_to_context_diagram(item_type)) return null;
+	
+	/* Create xml datastore element */
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
 	node.setAttribute(
