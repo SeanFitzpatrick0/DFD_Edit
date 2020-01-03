@@ -109,35 +109,6 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	);
 }
 
-function remove_entity(entity_name) {
-	/**
-	 * Removes all occurrences of an entity in the DFD
-	 * @param  {String} entity_name Name of the entity to remove
-	 */
-	// Find all occurrences of the entity
-	let occurrences = find_all_occurrences(entity_name, "entity", hierarchy);
-
-	// Remove all entities
-	occurrences.forEach(occurrence => {
-		let graph = get_hierarchy_diagram(occurrence).graph_model;
-		let cell = find_cell_in_graph(graph, entity_name, "entity");
-
-		/* Remove entity from current graph */
-		let remove_graph = new mxGraph(null, graph);
-		try {
-			remove_graph.getModel().beginUpdate();
-			if (remove_graph.getModel().isVertex(cell))
-				remove_graph.removeCells([cell]);
-		} catch {
-		} finally {
-			remove_graph.getModel().endUpdate();
-		}
-		set_hierarchy_diagram(occurrence, {
-			new_model: remove_graph.getModel()
-		});
-	});
-}
-
 function validate_cell_type(cell_type) {
 	/**
 	 * Validates cell type

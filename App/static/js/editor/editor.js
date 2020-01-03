@@ -324,23 +324,40 @@ function graph_delete(sender, event) {
 	const GRAPH_SWITCH_UPDATE_LEVEL = 2;
 	if (sender.getModel().updateLevel != GRAPH_SWITCH_UPDATE_LEVEL) {
 		let cells = event.getProperty("cells");
-		let remove_cells_with_subprocess = [];
 		cells.forEach(cell => {
-			// Handel deleting entity
-			if (cell.item_type == "entity")
-				remove_entity(cell.value.getAttribute("label"));
+			let cell_name = editor.graph.convertValueToString(cell);
 
-			// Check if cell has sub processes
-			let process_title = editor.graph.convertValueToString(cell);
-			try {
-				let found_hierarchy = get_hierarchy_diagram(process_title);
-				remove_cells_with_subprocess.push(found_hierarchy.name);
-			} catch {}
-		});
+			/* Find and remove all occurrence */
+			let occurrences = find_all_occurrences(
+				cell_name,
+				cell.item_type,
+				hierarchy
+			);
+			occurrences.forEach(occurrence => {
+				let graph = get_hierarchy_diagram(occurrence).graph_model;
+				let found_cell = find_cell_in_graph(
+					graph,
+					cell_name,
+					cell.item_type
+				);
 
-		// Remove from sub processes hierarchy
-		remove_cells_with_subprocess.forEach(process_name => {
-			remove_from_hierarchy(process_name);
+				/* Remove item from current graph */
+				let remove_graph = new mxGraph(null, graph);
+				try {
+					remove_graph.getModel().beginUpdate();
+					if (remove_graph.getModel().isVertex(found_cell))
+						remove_graph.removeCells([found_cell]);
+				} catch {
+				} finally {
+					remove_graph.getModel().endUpdate();
+				}
+				set_hierarchy_diagram(occurrence, {
+					new_model: remove_graph.getModel()
+				});
+			});
+
+			// If process and in hierarchy remove
+			if (cell.item_type == "process") remove_from_hierarchy(cell_name);
 		});
 
 		// Update id's when deleted
