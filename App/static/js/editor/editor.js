@@ -106,7 +106,11 @@ function main(editor_path, loaded_hierarchy) {
 
 					/* If entity added, add it to all parent processes */
 					if (cell.item_type == "entity")
-						add_item_to_subprocess(cell, active_process_name, new Set());
+						add_item_to_subprocess(
+							cell,
+							active_process_name,
+							new Set()
+						);
 				});
 
 				/* Save any changes of the current graph to the diagram hierarchy data structure */
@@ -123,14 +127,14 @@ function main(editor_path, loaded_hierarchy) {
 		/* event handler */
 		// TODO add update for flow labels
 		editor.graph.addListener(mxEvent.LABEL_CHANGED, (sender, event) => {
-			[
-				["process", update_process_name],
-				["entity", update_entity_name]
-			].forEach(inputs => {
-				let [item_type, update_function] = inputs;
-				if (event.getProperty("cell").item_type == item_type)
-					update_function(sender, event);
-			});
+			let cell = event.getProperty("cell");
+			/* Update name of all occurrences */
+			if (["entity", "process", "datastore"].includes(cell.item_type))
+				rename_all_occurrences(sender, event);
+
+			/* Update hierarchy list and data structure */
+			if (cell.item_type == "process")
+				update_hierarchy_name(sender, event);
 		});
 
 		// Add cell resize event listener for processes

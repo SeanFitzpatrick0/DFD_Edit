@@ -285,7 +285,7 @@ function is_valid_flow_name(name, cell) {
 	return [true];
 }
 
-function update_process_name(sender, event) {
+function update_hierarchy_name(sender, event) {
 	/**
 	 * Handles process name change. Update value is validate before executing the event.
 	 * Updates the name of the process in the hierarchy data structure and hierarchy html list
@@ -319,23 +319,23 @@ function update_process_name(sender, event) {
 	list_item_title.innerText = new_name;
 }
 
-function update_entity_name(sender, event) {
+function rename_all_occurrences(sender, event) {
 	/**
-	 * Handles entity name change. Update value is validate before executing the event.
-	 * Updates the name of the entity in DFD
+	 * Renames all occurrences of a item in the DFD
 	 * @param {Object} sender Sender of the event
 	 * @param {Object} event Label changed event
 	 */
 	let new_name = event.getProperty("value").getAttribute("label");
 	let old_name = event.getProperty("old").getAttribute("label");
+	let item_type = event.getProperty("cell").item_type;
 
-	// Find all occurrences of the entity
-	let occurrences = find_all_occurrences(old_name, "entity", hierarchy);
+	// Find all occurrences of the item
+	let occurrences = find_all_occurrences(old_name, item_type, hierarchy);
 
-	// Change name of all entities
+	// Change name of all occurrences
 	occurrences.forEach(occurrence => {
 		let graph = get_hierarchy_diagram(occurrence).graph_model;
-		let cell = find_cell_in_graph(graph, old_name, "entity");
+		let cell = find_cell_in_graph(graph, old_name, item_type);
 		cell.value.setAttribute("label", new_name);
 	});
 }
