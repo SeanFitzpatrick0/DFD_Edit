@@ -306,8 +306,8 @@ function update_process_name(sender, event) {
 	 * @param {Object} sender Sender of the event
 	 * @param {Object} event Label changed event
 	 */
-	let previous_name = event.getProperty("old");
-	let new_name = event.getProperty("value");
+	let previous_name = event.getProperty("old").getAttribute("label");
+	let new_name = event.getProperty("value").getAttribute("label");
 
 	// Check if process is in diagram hierarchy
 	let process = null;
