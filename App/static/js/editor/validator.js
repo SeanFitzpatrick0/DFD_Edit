@@ -1,6 +1,6 @@
 function create_id(parent_id, id_ending, item_type) {
 	/**
-	 * Creates the ID for a new process
+	 * Creates the ID for a new process or datastore
 	 * @param  {String} parent_id ID of the parent graph.
 	 *                          Null if creating ID for system process.
 	 * @param  {Integer} id_ending (Optional) The number ending for the ID.
@@ -38,7 +38,6 @@ function update_ids(parent_id, graph) {
 	 * @param  {String} parent_id ID of the parent graph.
 	 * @param  {Object} graph MxGraph model to update
 	 */
-
 	["process", "datastore"].forEach(item_type => {
 		let counter = 1;
 
@@ -73,54 +72,41 @@ function update_ids(parent_id, graph) {
 	editor.graph.refresh();
 }
 
-function add_entity(entity_cell, process_name, visited) {
+function add_item_to_subprocess(cell, process_name, visited) {
 	/**
-	 * Adds a entity to all parent processes and connected sub processes
-	 * @param  {Object} entity_cell The entity cell being added
-	 * @param  {String} process_name The name of the process the entity is being added to
+	 * Adds a cell to sub process (and parent if entity)
+	 * @param  {Object} cell The cell being added
+	 * @param  {String} process_name The name of the process the cell is being added to
 	 * @param  {Set} visited Set of the names of already visited processes
 	 * 					Used to prevent cycles when traversing the DFD
 	 */
-
 	// Check if already visited
 	if (visited.has(process_name)) return;
 	visited.add(process_name);
 
-	// Add entity in parent process
+	// Add entity in parent process as all entities must appear in the context diagram
 	let process = get_hierarchy_diagram(process_name);
-	if (process.parent_name)
-		add_entity(entity_cell, process.parent_name, visited);
+	if (cell.item_type == "entity" && process.parent_name)
+		add_item_to_subprocess(cell, process.parent_name, visited);
 
-	// Add entity to all connected sub processes
-	let sub_processes = find_connecting_cells(entity_cell, "process");
-
-	sub_processes.forEach(process => {
-		// Add entity to subprocess if exists
-		try {
-			get_hierarchy_diagram(process.value.getAttribute("label"));
-			add_entity(
-				entity_cell,
-				process.value.getAttribute("label"),
-				visited
-			);
-		} catch {}
-	});
-
-	// Add entity to process
+	// Add item to current process
 	let current_graph = process.graph_model;
-
-	/* Check if entity is already in the graph */
+	/* Skip if item is already in the graph */
 	if (
 		find_cell_in_graph(
 			current_graph,
-			entity_cell.value.getAttribute("label"),
-			"entity"
+			cell.value.getAttribute("label"),
+			cell.item_type
 		)
 	)
 		return;
 
+	/* Add item and it's children cells (ID's) */
 	let parent = current_graph.getChildAt(current_graph.getRoot(), 0);
-	current_graph.add(parent, entity_cell.clone());
+	let copy = current_graph.add(parent, cell.clone());
+	(cell.children || []).forEach(child =>
+		current_graph.add(copy, child.clone())
+	);
 }
 
 function remove_entity(entity_name) {

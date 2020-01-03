@@ -5,7 +5,6 @@ var hierarchy = {};
 
 // Global styles
 // TODO prevent ID connectable
-// TODO prevent graph items from resize
 const ID_PERMISSION =
 	"editable=0;movable=0;resizable=0;cloneable=0;deletable=0;";
 const CONTAINER_STYLE =
@@ -58,18 +57,19 @@ function main(editor_path, loaded_hierarchy) {
 
 		create_hierarchy(loaded_hierarchy);
 
-		// Add graph change event listener
+		// Add graph select and add cell listener
 		// TODO refactor this event handler
 		editor.graph
 			.getSelectionModel()
 			.addListener(mxEvent.CHANGE, (sender, event) => {
-				// Handel graph selection
+				/* Handel graph selection */
 				graph_select(sender, event);
 
-				// Add any updated entities
+				/* Get cells added */
+				let active_process_name = get_active_hierarchy_item_and_name()[1];
 				let cells = event.getProperty("removed") || [];
 				cells.forEach(cell => {
-					// Set edge item type and value
+					/* Set flow item type and value */
 					if (cell.edge && !cell.item_type) {
 						cell.item_type = "flow";
 						cell.value = `flow_${Math.floor(Math.random() * 1000)}`;
@@ -77,22 +77,40 @@ function main(editor_path, loaded_hierarchy) {
 						editor.graph.refresh();
 					}
 
-					// If edge get the connected entity
-					if (cell.source && cell.source.item_type == "entity")
-						cell = cell.source;
-					else if (cell.target && cell.target.item_type == "entity")
-						cell = cell.target;
-
-					// Add entity
-					if (cell.item_type == "entity") {
-						let active_process_name = get_active_hierarchy_item_and_name()[1];
-						add_entity(cell, active_process_name, new Set());
+					/* If edge connects an item to a sub process, add that item to the sub process */
+					if (cell.edge) {
+						["source", "target"].forEach(direction => {
+							/* Does sub process exist */
+							let item = cell[direction];
+							if (item.item_type == "process")
+								try {
+									let process_name = editor.graph.convertValueToString(
+										cell[direction]
+									);
+									let process = get_hierarchy_diagram(
+										process_name
+									);
+									/* Add the cell in the opposite direction to the sub process */
+									let opposite =
+										direction == "source"
+											? "target"
+											: "source";
+									add_item_to_subprocess(
+										cell[opposite],
+										process_name,
+										new Set()
+									);
+								} catch {}
+						});
 					}
+
+					/* If entity added, add it to all parent processes */
+					if (cell.item_type == "entity")
+						add_item_to_subprocess(cell, active_process_name, new Set());
 				});
 
-				// Save change to diagram hierarchy data structure
-				let active_graph_name = get_active_hierarchy_item_and_name()[1];
-				save_current_graph(active_graph_name);
+				/* Save any changes of the current graph to the diagram hierarchy data structure */
+				save_current_graph(active_process_name);
 			});
 
 		// Add cell delete event listener
@@ -115,7 +133,7 @@ function main(editor_path, loaded_hierarchy) {
 			});
 		});
 
-		// Resize event listener for processes
+		// Add cell resize event listener for processes
 		editor.graph.addListener(mxEvent.CELLS_RESIZED, (sender, event) => {
 			let parent = event.getProperty("cells")[0];
 			if (parent.item_type == "process") {
@@ -145,7 +163,6 @@ function create_editor(editor_config_path, graph_container) {
 	 * @param  {Object} graph_container HTML element of the graph container.
 	 * @returns {Object} The created editor.
 	 */
-
 	// Create editor with key handler config
 	mxObjectCodec.allowEval = true;
 	let editor_config = mxUtils.load(editor_config_path).getDocumentElement();
@@ -180,7 +197,6 @@ function create_toolbar(graph, toolbar_container, image_dir_path) {
 	 * @param  {Object} toolbar_container HTML element of the toolbar container.
 	 * @param  {String} image_dir_path Path to the editor image directory.
 	 */
-
 	// Add entity element
 	add_toolbar_item(
 		graph,
@@ -218,7 +234,6 @@ function add_toolbar_item(graph, toolbar, add_item, item_dimension, image) {
 	 * @param  {Object} item_dimension Width and Height of the item.
 	 * @param  {String} image Path to the image that will be added to the toolbar.
 	 */
-
 	// Create toolbar item image and add to toolbar
 	let img = document.createElement("img");
 	img.setAttribute("src", image);
@@ -268,7 +283,6 @@ function graph_select(sender, event) {
 	 * @param  {Object} sender Sender of the event
 	 * @param  {Object} event Details about event
 	 */
-
 	// Get selected cells
 	let cells = event.getProperty("removed");
 
@@ -512,20 +526,24 @@ function find_connecting_cells(cell, cell_type) {
 	 * Finds all cells connected to a given cell of a set type
 	 * @param {Object} cell Root cell
 	 * @param {String} cell_type Type of cell being searched for
+	 * 		(if null includes cell of any type)
 	 * @returns The list of connected cells
 	 * @throws Exception if invalid cell type
 	 */
 	// validate cell type
-	validate_cell_type(cell_type);
+	if (cell_type) validate_cell_type(cell_type);
 
 	connected_cells = [];
 	(cell.edges || []).forEach(edge => {
 		["target", "source"].forEach(direction => {
-			if (
-				edge[direction].item_type == cell_type &&
-				(edge[direction].getAttribute("label") !=
+			let same_type = edge[direction].item_type == cell_type;
+			let not_same_item =
+				edge[direction].getAttribute("label") !=
 					cell.value.getAttribute("label") ||
-					edge[direction].item_title != cell_type)
+				edge[direction].item_type != cell.item_type;
+			if (
+				(cell_type == null && not_same_item) ||
+				(same_type && not_same_item)
 			)
 				connected_cells.push(edge[direction]);
 		});

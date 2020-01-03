@@ -257,17 +257,17 @@ function add_diagram_button_handler() {
 	// Add to hierarchy
 	add_to_hierarchy(item_name, parent_name, item_id);
 
-	// Add any connected entities into sub process
+	// Add any connected items into sub process
 	let current_graph_name = get_active_hierarchy_item_and_name()[1];
 	let current_graph = get_hierarchy_diagram(current_graph_name).graph_model;
 
 	/* Find that process in current graph */
 	let process_cell = find_cell_in_graph(current_graph, item_name, "process");
 
-	/* Find the connected entities */
-	let connected_entities = find_connecting_cells(process_cell, "entity");
-	connected_entities.forEach(entity =>
-		add_entity(entity, item_name, new Set())
+	/* Find the connected items and add these items to the sub process */
+	let connected_items = find_connecting_cells(process_cell, null);
+	connected_items.forEach(
+		item => add_item_to_subprocess(item, item_name, new Set())
 	);
 }
 
