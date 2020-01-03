@@ -170,8 +170,9 @@ function is_valid_label_change(cell, value, evt) {
 	 * @param {String} value The new value of the cell
 	 * @param {Object} event Label edit event
 	 */
+	// Remove new lines
+	value = value.replace(/\n/g, "");
 	// Validate process label change
-	// TODO validate flow label change
 	[
 		["process", is_valid_process_name],
 		["entity", is_valid_entity_name],
