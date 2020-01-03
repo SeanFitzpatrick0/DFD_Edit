@@ -115,6 +115,16 @@ function main(editor_path, loaded_hierarchy) {
 			});
 		});
 
+		// Resize event listener for processes
+		editor.graph.addListener(mxEvent.CELLS_RESIZED, (sender, event) => {
+			let parent = event.getProperty("cells")[0];
+			if (parent.item_type == "process") {
+				/* resize the width of the id to be the same as the parent */
+				let child = parent.children[0];
+				child.geometry.width = parent.geometry.width;
+			}
+		});
+
 		// Set flow and cell validation rules
 		set_validation_rules();
 
@@ -410,7 +420,7 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 	const item_type = "datastore";
 	/* is valid placement  */
 	if (!can_add_to_context_diagram(item_type)) return null;
-	
+
 	/* Create xml datastore element */
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
