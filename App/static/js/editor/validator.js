@@ -142,6 +142,9 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	(cell.children || []).forEach(child =>
 		current_graph.add(copy, child.clone())
 	);
+
+	/* Set flag that is from parent */
+	copy.value.setAttribute("from_parent", true);
 }
 
 function validate_cell_type(cell_type) {
@@ -372,7 +375,7 @@ function set_validation_rules() {
 		new mxMultiplicity(
 			false,
 			"process",
-			null,
+			"from_parent",
 			null,
 			1,
 			null,
@@ -386,7 +389,7 @@ function set_validation_rules() {
 		new mxMultiplicity(
 			true,
 			"process",
-			null,
+			"from_parent",
 			null,
 			1,
 			null,
