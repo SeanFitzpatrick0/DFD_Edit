@@ -16,11 +16,16 @@ function create_id(parent_id, id_ending, item_type) {
 
 	// If no ending, increment number of that item
 	if (!id_ending) {
-		let current_graph = editor.graph.getModel();
-		let graph_cells = current_graph.cells;
+		let graph_cells = editor.graph.getModel().cells;
 		let item_cells = [];
 		for (cell in graph_cells)
 			if (graph_cells[cell].item_type == item_type) item_cells.push(cell);
+		// Filter out cells that belong to parent processes
+		if (parent_id && parent_id != "0")
+			item_cells = item_cells.filter(cell_index => {
+				let cell = graph_cells[cell_index];
+				return !is_cell_from_parent_process(parent_id, cell);
+			});
 		id_ending = item_cells.length + 1;
 	}
 
@@ -38,38 +43,68 @@ function update_ids(parent_id, graph) {
 	 * @param  {String} parent_id ID of the parent graph.
 	 * @param  {Object} graph MxGraph model to update
 	 */
+	// Update each item in the graph
+	let active_graph_name = get_active_hierarchy_item_and_name()[1];
 	["process", "datastore"].forEach(item_type => {
 		let counter = 1;
-
-		// Update each item in the graph
 		for (key in graph.cells) {
 			let cell = graph.cells[key];
-			if (cell.item_type == item_type) {
+			let cell_name = editor.graph.convertValueToString(cell);
+			if (
+				cell.item_type == item_type &&
+				!is_cell_from_parent_process(parent_id, cell)
+			) {
+				// Update id in all occurrences
 				let new_id = create_id(parent_id, counter, item_type);
+				let occurrences = find_all_occurrences(
+					cell_name,
+					cell.item_type,
+					hierarchy
+				);
+				occurrences.forEach(occurrence => {
+					// Update id of current graph
+					let process = get_hierarchy_diagram(occurrence);
+					let graph =
+						occurrence == active_graph_name
+							? editor.graph.getModel()
+							: process.graph_model;
+					let cell = find_cell_in_graph(graph, cell_name, item_type);
+					cell.children[0].value = new_id;
 
-				// Update id in graph model
-				cell.children[0].value = new_id;
-
-				if (item_type == "process") {
-					// Update process id in hierarch data structure
 					try {
-						let process_name = editor.graph.convertValueToString(
-							cell
+						// Update id in hierarchy data structure
+						let sub_process = get_hierarchy_diagram(cell_name);
+						sub_process.process_id = new_id;
+						// Recursively update the id of sub processes
+						update_ids(
+							sub_process.process_id,
+							sub_process.graph_model
 						);
-						let process = get_hierarchy_diagram(process_name);
-						process.process_id = new_id;
-
-						// Recursively update the ids of sub processes
-						update_ids(process.process_id, process.graph_model);
 					} catch {}
-				}
+				});
+
 				counter++;
 			}
 		}
 	});
 
-	// Update changes
+	// Update changes in current graph
 	editor.graph.refresh();
+}
+
+function is_cell_from_parent_process(process_id, cell) {
+	/**
+	 * Determines if a process id is from a parent process
+	 * @param  {String} process_id The id of the current process
+	 * @param  {Object} cell The cell with an id
+	 * @return {Boolean} Wether is a parent id process
+	 */
+	if (!process_id || process_id == "0") return false;
+	let cell_id =
+		cell.item_type == "process"
+			? cell.children[0].value
+			: cell.children[0].value.substring(1);
+	return cell_id.length <= process_id.length;
 }
 
 function add_item_to_subprocess(cell, process_name, visited) {

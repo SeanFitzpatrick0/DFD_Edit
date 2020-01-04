@@ -323,6 +323,11 @@ function graph_delete(sender, event) {
 		removing a cell and not from cells being remove when switching graphs */
 	const GRAPH_SWITCH_UPDATE_LEVEL = 2;
 	if (sender.getModel().updateLevel != GRAPH_SWITCH_UPDATE_LEVEL) {
+		let parent_cell_removed = false;
+		let current_graph_name = get_active_hierarchy_item_and_name()[1];
+		let process = get_hierarchy_diagram(current_graph_name);
+		let process_id = process.process_id;
+
 		let cells = event.getProperty("cells");
 		cells.forEach(cell => {
 			let cell_name = editor.graph.convertValueToString(cell);
@@ -358,15 +363,19 @@ function graph_delete(sender, event) {
 
 			// If process and in hierarchy remove
 			if (cell.item_type == "process") remove_from_hierarchy(cell_name);
+
+			// Is cell from parent process
+			if (is_cell_from_parent_process(process_id, cell))
+				parent_cell_removed = true;
 		});
 
 		// Update id's when deleted
-		/* Gets the text of the active diagram list item and 
-		selects the first line as there will be multiple lines if it has nested list items */
-		let current_graph_name = get_active_hierarchy_item_and_name()[1];
-		let current_graph_id = get_hierarchy_diagram(current_graph_name)
-			.process_id;
-		update_ids(current_graph_id, editor.graph.getModel());
+		/* Do id's in parent process need to be updated */
+		if (parent_cell_removed) {
+			let parent_name = process.parent_name;
+			let parent_process = get_hierarchy_diagram(parent_name);
+			update_ids(parent_process.process_id, parent_process.graph_model);
+		} else update_ids(process_id, editor.graph.getModel());
 	}
 
 	event.consume();

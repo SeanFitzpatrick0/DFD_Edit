@@ -120,8 +120,12 @@ function remove_from_hierarchy(name) {
 	/* Check name not empty */
 	if (!name || name.length == 0)
 		throw "Error: Can't remove a diagram with no name.";
-	/* Check if diagram is already in hierarchy */
-	get_hierarchy_diagram(name);
+	/* Check if diagram is in hierarchy */
+	try {
+		get_hierarchy_diagram(name);
+	} catch {
+		return;
+	}
 
 	// Remove from html hierarchy list
 	let id_name = name.replace(/[ ]/g, "_"); // replace spaces with underscore
@@ -266,8 +270,8 @@ function add_diagram_button_handler() {
 
 	/* Find the connected items and add these items to the sub process */
 	let connected_items = find_connecting_cells(process_cell, null);
-	connected_items.forEach(
-		item => add_item_to_subprocess(item, item_name, new Set())
+	connected_items.forEach(item =>
+		add_item_to_subprocess(item, item_name, new Set())
 	);
 }
 
