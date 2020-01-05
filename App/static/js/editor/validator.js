@@ -471,8 +471,8 @@ function set_validation_rules() {
 			let cell_inflows = new Set();
 			let cell_outflows = new Set();
 			(cell.edges || []).forEach(edge => {
-				if (edge.source == cell) cell_inflows.add(edge.value);
-				else cell_outflows.add(edge.value);
+				if (edge.source == cell) cell_outflows.add(edge.value);
+				else cell_inflows.add(edge.value);
 			});
 
 			[
@@ -492,7 +492,7 @@ function set_validation_rules() {
 				/* Which flows is the cell missing */
 				for (let required_flow of required_flows)
 					if (!cell_flows.has(required_flow))
-						errors += `Item need ${title} with name ${required_flow}\n`;
+						errors += `Item needs ${title} with name ${required_flow}\n`;
 			});
 		}
 		return errors;
