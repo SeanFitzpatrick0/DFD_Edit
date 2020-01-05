@@ -462,6 +462,7 @@ function add_process_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height / 5,
 		ID_STYLE
 	);
+	id.setConnectable(false);
 
 	container.item_type = item_type;
 	return container;
@@ -507,6 +508,7 @@ function add_datastore_to_graph(parent, graph, x, y, dimensions) {
 		dimensions.height,
 		ID_STYLE
 	);
+	id.setConnectable(false);
 
 	container.item_type = item_type;
 	return container;
