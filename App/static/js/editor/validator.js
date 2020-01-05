@@ -350,8 +350,12 @@ function rename_all_occurrences(sender, event) {
 	 * @param {Object} sender Sender of the event
 	 * @param {Object} event Label changed event
 	 */
-	let new_name = event.getProperty("value").getAttribute("label");
-	let old_name = event.getProperty("old").getAttribute("label");
+	let new_name = mxUtils.isNode(event.getProperty("value"))
+		? event.getProperty("value").getAttribute("label")
+		: event.getProperty("value");
+	let old_name = mxUtils.isNode(event.getProperty("old"))
+		? event.getProperty("old").getAttribute("label")
+		: event.getProperty("old");
 	let item_type = event.getProperty("cell").item_type;
 
 	// Find all occurrences of the item
@@ -361,7 +365,49 @@ function rename_all_occurrences(sender, event) {
 	occurrences.forEach(occurrence => {
 		let graph = get_hierarchy_diagram(occurrence).graph_model;
 		let cell = find_cell_in_graph(graph, old_name, item_type);
-		cell.value.setAttribute("label", new_name);
+		mxUtils.isNode(event.getProperty("value"))
+			? cell.value.setAttribute("label", new_name)
+			: (cell.value = new_name);
+	});
+}
+
+function update_flow_requirements(cell, old_name, new_name) {
+	/**
+	 * Updates the flow requirements of all occurrences of connected items to the flow
+	 * @param {Object} cell The flow being updated
+	 * @param {String} old_name The old name of the flow
+	 * @param {String} new_name The new name of the flow
+	 */
+	let active_process_name = get_active_hierarchy_item_and_name()[1];
+	/* Rename required flow in all occurrences */
+	["source", "target"].forEach(direction => {
+		/* Get all occurrences */
+		let item = cell[direction];
+		let item_name = editor.graph.convertValueToString(item);
+		let occurrences = find_all_occurrences(
+			item_name,
+			item.item_type,
+			get_hierarchy_diagram(active_process_name)
+		);
+		occurrences.forEach(occurrence => {
+			/* Find cell occurrence */
+			let graph = get_hierarchy_diagram(occurrence).graph_model;
+			let cell = find_cell_in_graph(graph, item_name, item.item_type);
+			["required_inflows", "required_outflows"].forEach(required_flow => {
+				let required_flows_string = cell.value.getAttribute(
+					required_flow
+				);
+				let required_flows = new Set(JSON.parse(required_flows_string));
+				/* If cell has renamed flow, remove old name and add new */
+				if (required_flows.delete(old_name)) {
+					required_flows.add(new_name);
+					cell.value.setAttribute(
+						required_flow,
+						JSON.stringify([...required_flows])
+					);
+				}
+			});
+		});
 	});
 }
 

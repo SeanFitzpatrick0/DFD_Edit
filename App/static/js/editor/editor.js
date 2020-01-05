@@ -125,16 +125,30 @@ function main(editor_path, loaded_hierarchy) {
 		mxGraphLabelChanged = mxGraph.prototype.labelChanged;
 		mxGraph.prototype.labelChanged = is_valid_label_change;
 		/* event handler */
-		// TODO add update for flow labels
 		editor.graph.addListener(mxEvent.LABEL_CHANGED, (sender, event) => {
 			let cell = event.getProperty("cell");
 			/* Update name of all occurrences */
-			if (["entity", "process", "datastore"].includes(cell.item_type))
+			if (
+				["entity", "process", "datastore", "flow"].includes(
+					cell.item_type
+				)
+			)
 				rename_all_occurrences(sender, event);
 
 			/* Update hierarchy list and data structure */
 			if (cell.item_type == "process")
 				update_hierarchy_name(sender, event);
+
+			/* Update required flows if flow renamed */
+			if (cell.item_type == "flow") {
+				let new_name = mxUtils.isNode(event.getProperty("value"))
+					? event.getProperty("value").getAttribute("label")
+					: event.getProperty("value");
+				let old_name = mxUtils.isNode(event.getProperty("old"))
+					? event.getProperty("old").getAttribute("label")
+					: event.getProperty("old");
+				update_flow_requirements(cell, old_name, new_name);
+			}
 		});
 
 		// Add cell resize event listener for processes
