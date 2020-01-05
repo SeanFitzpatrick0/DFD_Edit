@@ -332,41 +332,37 @@ function graph_delete(sender, event) {
 		cells.forEach(cell => {
 			let cell_name = editor.graph.convertValueToString(cell);
 
-			/* Find and remove all occurrence */
-			let occurrences = find_all_occurrences(
-				cell_name,
-				cell.item_type,
-				hierarchy
-			);
-			occurrences.forEach(occurrence => {
-				let graph = get_hierarchy_diagram(occurrence).graph_model;
-				let found_cell = find_cell_in_graph(
-					graph,
+			// Edge being deleted
+			if (cell.edge) {
+				handel_flow_delete(cell);
+			} else {
+				// Graph Item being deleted
+				/* Find and remove all occurrence */
+				let occurrences = find_all_occurrences(
 					cell_name,
-					cell.item_type
+					cell.item_type,
+					hierarchy
 				);
+				occurrences.forEach(occurrence => {
+					let graph = get_hierarchy_diagram(occurrence).graph_model;
+					let found_cell = find_cell_in_graph(
+						graph,
+						cell_name,
+						cell.item_type
+					);
 
-				/* Remove item from current graph */
-				let remove_graph = new mxGraph(null, graph);
-				try {
-					remove_graph.getModel().beginUpdate();
-					if (remove_graph.getModel().isVertex(found_cell))
-						remove_graph.removeCells([found_cell]);
-				} catch {
-				} finally {
-					remove_graph.getModel().endUpdate();
-				}
-				set_hierarchy_diagram(occurrence, {
-					new_model: remove_graph.getModel()
+					/* Remove item from current graph */
+					remove_cell_from_graph(occurrence, graph, found_cell);
 				});
-			});
 
-			// If process and in hierarchy remove
-			if (cell.item_type == "process") remove_from_hierarchy(cell_name);
+				// If process and in hierarchy remove
+				if (cell.item_type == "process")
+					remove_from_hierarchy(cell_name);
 
-			// Is cell from parent process
-			if (is_cell_from_parent_process(process_id, cell))
-				parent_cell_removed = true;
+				// Is cell from parent process
+				if (is_cell_from_parent_process(cell))
+					parent_cell_removed = true;
+			}
 		});
 
 		// Update id's when deleted
@@ -580,4 +576,90 @@ function find_connecting_cells(cell, cell_type) {
 	});
 
 	return connected_cells;
+}
+
+function remove_cell_from_graph(process_name, graph, cell) {
+	/**
+	 * Remove a cell from graph and sets this value in the diagram hierarchy
+	 * @param {String} process_name The name of the process being updated
+	 * @param {Object} graph The graph with cell being removed
+	 * @param {Object} cell The cell being removed
+	 */
+	let remove_graph = new mxGraph(null, graph);
+	try {
+		remove_graph.getModel().beginUpdate();
+		if (remove_graph.getModel().isVertex(cell))
+			remove_graph.removeCells([cell]);
+	} catch {
+	} finally {
+		remove_graph.getModel().endUpdate();
+	}
+	set_hierarchy_diagram(process_name, {
+		new_model: remove_graph.getModel()
+	});
+}
+
+function handel_flow_delete(cell) {
+	/**
+	 * Handles a edge removal. Remove this flow requirement from items in sub processes.
+	 * Removes cell from parent in sub process if it no longer has any required flows.
+	 * @param {Object} cell The edge being removed
+	 */
+	["source", "target"].forEach((direction, i) => {
+		// Is edge connected to a sub process
+		try {
+			// Remove the required in/out flow of the item connected to the sub process
+			/* Get the cell at both sides of the edge */
+			let opposite_direction =
+				direction == "target" ? "source" : "target";
+			let process_cell = cell[direction];
+			let opposite_cell = cell[opposite_direction];
+			let process_name = editor.graph.convertValueToString(process_cell);
+			let opposite_cell_name = editor.graph.convertValueToString(
+				opposite_cell
+			);
+
+			/* Get sub process */
+			let sub_process = get_hierarchy_diagram(process_name);
+			/* Remove in/out flow requirement for that sub process and all its sub processes */
+			let occurrences = find_all_occurrences(
+				opposite_cell_name,
+				opposite_cell.item_type,
+				sub_process
+			);
+			occurrences.forEach(occurrence => {
+				let graph = get_hierarchy_diagram(occurrence).graph_model;
+				let found_cell = find_cell_in_graph(
+					graph,
+					opposite_cell_name,
+					opposite_cell.item_type
+				);
+
+				/* Remove in/out flow requirement */
+				let flow_requirements = [
+					"required_inflows",
+					"required_outflows"
+				];
+				let required_flow_string = found_cell.value.getAttribute(
+					flow_requirements[i]
+				);
+				let required_flows = new Set(JSON.parse(required_flow_string));
+				required_flows.delete(cell.value);
+				found_cell.value.setAttribute(
+					flow_requirements[i],
+					JSON.stringify([...required_flows])
+				);
+
+				/* If that cell has not flow requirements (i.e. its no longer connected to the subprocess)
+					remove that cell from the sub process */
+				if (
+					flow_requirements.every(
+						requirement =>
+							found_cell.value.getAttribute(requirement) == "[]"
+					)
+				)
+					remove_cell_from_graph(occurrence, graph, found_cell);
+			});
+		} catch {}
+	});
 }

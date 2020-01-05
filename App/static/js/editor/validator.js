@@ -24,7 +24,7 @@ function create_id(parent_id, id_ending, item_type) {
 		if (parent_id && parent_id != "0")
 			item_cells = item_cells.filter(cell_index => {
 				let cell = graph_cells[cell_index];
-				return !is_cell_from_parent_process(parent_id, cell);
+				return !is_cell_from_parent_process(cell);
 			});
 		id_ending = item_cells.length + 1;
 	}
@@ -52,7 +52,7 @@ function update_ids(parent_id, graph) {
 			let cell_name = editor.graph.convertValueToString(cell);
 			if (
 				cell.item_type == item_type &&
-				!is_cell_from_parent_process(parent_id, cell)
+				!is_cell_from_parent_process(cell)
 			) {
 				// Update id in all occurrences
 				let new_id = create_id(parent_id, counter, item_type);
@@ -92,19 +92,13 @@ function update_ids(parent_id, graph) {
 	editor.graph.refresh();
 }
 
-function is_cell_from_parent_process(process_id, cell) {
+function is_cell_from_parent_process(cell) {
 	/**
 	 * Determines if a process id is from a parent process
-	 * @param  {String} process_id The id of the current process
 	 * @param  {Object} cell The cell with an id
 	 * @return {Boolean} Wether is a parent id process
 	 */
-	if (!process_id || process_id == "0") return false;
-	let cell_id =
-		cell.item_type == "process"
-			? cell.children[0].value
-			: cell.children[0].value.substring(1);
-	return cell_id.length <= process_id.length;
+	return mxUtils.isNode(cell.value) && cell.value.getAttribute("from_parent");
 }
 
 function add_item_to_subprocess(cell, process_name, visited) {
@@ -128,23 +122,45 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	let current_graph = process.graph_model;
 	/* Skip if item is already in the graph */
 	if (
-		find_cell_in_graph(
+		!find_cell_in_graph(
 			current_graph,
 			cell.value.getAttribute("label"),
 			cell.item_type
 		)
-	)
-		return;
+	) {
+		/* Add item and it's children cells (ID's) */
+		let parent = current_graph.getChildAt(current_graph.getRoot(), 0);
+		let copy = current_graph.add(parent, cell.clone());
+		(cell.children || []).forEach(child =>
+			current_graph.add(copy, child.clone())
+		);
 
-	/* Add item and it's children cells (ID's) */
-	let parent = current_graph.getChildAt(current_graph.getRoot(), 0);
-	let copy = current_graph.add(parent, cell.clone());
-	(cell.children || []).forEach(child =>
-		current_graph.add(copy, child.clone())
+		/* Set flag that is from parent */
+		copy.value.setAttribute("from_parent", true);
+	}
+
+	/* Set required in and out flows for this item in the sub process */
+	let required_inflows = new Set();
+	let required_outflows = new Set();
+	(cell.edges || []).forEach(edge => {
+		let source_name = editor.graph.convertValueToString(edge.source);
+		let target_name = editor.graph.convertValueToString(edge.target);
+		if (source_name == process_name) required_inflows.add(edge.value);
+		else if (target_name == process_name) required_outflows.add(edge.value);
+	});
+	let cell_from_parent = find_cell_in_graph(
+		current_graph,
+		cell.value.getAttribute("label"),
+		cell.item_type
 	);
-
-	/* Set flag that is from parent */
-	copy.value.setAttribute("from_parent", true);
+	cell_from_parent.value.setAttribute(
+		"required_inflows",
+		JSON.stringify([...required_inflows])
+	);
+	cell_from_parent.value.setAttribute(
+		"required_outflows",
+		JSON.stringify([...required_outflows])
+	);
 }
 
 function validate_cell_type(cell_type) {
@@ -371,6 +387,7 @@ function set_validation_rules() {
 	);
 
 	// A process must have at least one in flow of data
+	/* excludes parent processes in sub diagrams */
 	editor.graph.multiplicities.push(
 		new mxMultiplicity(
 			false,
@@ -385,6 +402,7 @@ function set_validation_rules() {
 	);
 
 	// A process must have at least one out flow of data
+	/* excludes parent processes in sub diagrams */
 	editor.graph.multiplicities.push(
 		new mxMultiplicity(
 			true,
@@ -432,11 +450,52 @@ function set_validation_rules() {
 		)
 	);
 
-	// All items must have at least one connections
+	// Custom cell validation
 	mxGraph.prototype.validateCell = (cell, context) => {
-		if (mxUtils.isNode(cell.value) && !cell.edges)
-			return "Item needs to be connected with a flow.";
-		return null;
+		let errors = "";
+
+		/* All cells must be connected with at least one flow */
+		if (
+			mxUtils.isNode(cell.value) &&
+			(!cell.edges || cell.edges.length == 0)
+		)
+			errors += "Item needs to be connected with a flow.\n";
+
+		/* Does cell from parent process have the correct 
+			in and out flows in the sub process */
+		if (
+			mxUtils.isNode(cell.value) &&
+			cell.value.getAttribute("from_parent")
+		) {
+			/* Get cell in and out flows*/
+			let cell_inflows = new Set();
+			let cell_outflows = new Set();
+			(cell.edges || []).forEach(edge => {
+				if (edge.source == cell) cell_inflows.add(edge.value);
+				else cell_outflows.add(edge.value);
+			});
+
+			[
+				["required_inflows", "in flow"],
+				["required_outflows", "out flow"]
+			].forEach(([flow, title]) => {
+				let required_flows = new Set(
+					JSON.parse(cell.value.getAttribute(flow))
+				);
+				let cell_flows =
+					flow == "required_inflows" ? cell_inflows : cell_outflows;
+
+				/* Does cell have the correct number of flows */
+				if (required_flows.size != cell_flows.size)
+					errors += `Item needs ${required_flows.size} ${title}s but has ${cell_flows.size}\n`;
+
+				/* Which flows is the cell missing */
+				for (let required_flow of required_flows)
+					if (!cell_flows.has(required_flow))
+						errors += `Item need ${title} with name ${required_flow}\n`;
+			});
+		}
+		return errors;
 	};
 
 	// Validates graph on every change event
