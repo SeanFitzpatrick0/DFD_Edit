@@ -163,14 +163,6 @@ function main(editor_path, loaded_hierarchy) {
 
 		// Set flow and cell validation rules
 		set_validation_rules();
-
-		// Overwrite cell value to string function
-		editor.graph.convertValueToString = cell => {
-			// If the cell value is xml data, return the `label` attribute
-			if (mxUtils.isNode(cell.value))
-				return cell.getAttribute("label", "");
-			else return cell.value;
-		};
 	}
 }
 
@@ -204,6 +196,13 @@ function create_editor(editor_config_path, graph_container) {
 
 	// Does not allow dangling edges
 	editor.graph.setAllowDanglingEdges(false);
+
+	// Overwrite cell value to string function
+	editor.graph.convertValueToString = cell => {
+		// If the cell value is xml data, return the `label` attribute
+		if (mxUtils.isNode(cell.value)) return cell.getAttribute("label", "");
+		else return cell.value;
+	};
 
 	return editor;
 }

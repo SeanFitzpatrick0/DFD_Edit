@@ -38,6 +38,20 @@ function load_hierarchy(current_hierarchy, parent_title) {
 		new_model: loaded_graph
 	});
 
+	// Set id of process in diagram hierarchy
+	try {
+		let parent_process = get_hierarchy_diagram(parent_title);
+		/* find current process cell in parent diagram */
+		let cell = find_cell_in_graph(
+			parent_process.graph_model,
+			current_hierarchy.title,
+			"process"
+		);
+		/* set id */
+		let new_id = cell.children[0].value;
+		set_hierarchy_diagram(current_hierarchy.title, { new_id });
+	} catch {}
+
 	// Recursively add children entries
 	current_hierarchy.children.forEach(child =>
 		load_hierarchy(child, current_hierarchy.title)
@@ -150,10 +164,14 @@ function get_hierarchy_diagram(name) {
 	return search_hierarchy;
 }
 
-function set_hierarchy_diagram(name, { new_name = null, new_model = null }) {
+function set_hierarchy_diagram(
+	name,
+	{ new_id = null, new_name = null, new_model = null }
+) {
 	/**
 	 * Gets new values for diagram in hierarchy.
 	 * @param  {String} name Name of diagram to set.
+	 * @param  {String} new_id Process id to set.
 	 * @param  {String} new_name (Optional) New name to set.
 	 * @param  {Object} new_model (Optional) New graph to set.
 	 * @throws exception if diagram not in hierarchy.
@@ -161,11 +179,13 @@ function set_hierarchy_diagram(name, { new_name = null, new_model = null }) {
 	let search_hierarchy = get_hierarchy_diagram(name);
 
 	// Validate new values
-	if (new_name != null)
+	if (new_name && new_name.length > 0)
 		if (new_name.length > 0) search_hierarchy.name = new_name;
 		else throw "Error: New diagram name cant be empty.";
 
-	if (new_model != null) search_hierarchy.graph_model = new_model;
+	if (new_model) search_hierarchy.graph_model = new_model;
+
+	if (new_id && new_id.length > 0) search_hierarchy.process_id = new_id;
 }
 
 function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
@@ -214,7 +234,7 @@ function get_process_parent(name, hierarchy) {
 	 */
 	let found_parent = null;
 	hierarchy.children.forEach(child => {
-		if (child.name == name) found_parent = child;
+		if (child.name == name) found_parent = hierarchy;
 		else {
 			let search_parent = get_process_parent(name, child);
 			if (search_parent) found_parent = search_parent;

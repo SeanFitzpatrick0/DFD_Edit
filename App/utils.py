@@ -148,4 +148,3 @@ def add_edit(editor_id, diagram_id, message):
                     edited_diagram=diagram_id, message=message)
     db.session.add(new_edit)
     db.session.commit()
-
