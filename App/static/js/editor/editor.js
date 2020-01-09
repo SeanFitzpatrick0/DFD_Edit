@@ -382,8 +382,7 @@ function graph_delete(sender, event) {
 		// Update id's when deleted
 		/* Do id's in parent process need to be updated */
 		if (parent_cell_removed) {
-			let parent_name = process.parent_name;
-			let parent_process = get_hierarchy_diagram(parent_name);
+			let parent_process = get_process_parent(process.name, hierarchy);
 			update_ids(parent_process.process_id, parent_process.graph_model);
 		} else update_ids(process_id, editor.graph.getModel());
 	}

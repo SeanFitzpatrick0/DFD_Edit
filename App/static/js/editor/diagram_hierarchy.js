@@ -73,11 +73,11 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	let empty_graph_model = new mxGraph().getModel();
 	let entry = {
 		process_id: process_id,
-		parent_name: parent_name,
 		name: name,
 		graph_model: empty_graph_model,
 		children: []
 	};
+
 	let parent_id;
 	if (!parent_name || name.length == 0) {
 		// Create starting hierarchy
@@ -175,7 +175,6 @@ function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
 	 * @param  {String} name Name of diagram being searched for.
 	 * @returns Diagram entry if found otherwise null.
 	 */
-
 	// Check for match
 	if (name == sub_hierarchy.name) return sub_hierarchy;
 
@@ -204,6 +203,25 @@ function _remove_diagram_hierarchy_helper(sub_hierarchy, search_name) {
 		}
 		return false;
 	});
+}
+
+function get_process_parent(name, hierarchy) {
+	/**
+	 * Recursively searches for parent process in hierarchy.
+	 * @param  {String} name Name of the child process
+	 * @param  {Object} hierarchy The current diagram hierarchy being searched
+	 * @returns Diagram entry of the process parent or null of doesn't exist
+	 */
+	let found_parent = null;
+	hierarchy.children.forEach(child => {
+		if (child.name == name) found_parent = child;
+		else {
+			let search_parent = get_process_parent(name, child);
+			if (search_parent) found_parent = search_parent;
+		}
+	});
+
+	return found_parent;
 }
 
 function switch_graph(event) {

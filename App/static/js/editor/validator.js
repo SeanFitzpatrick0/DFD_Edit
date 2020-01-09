@@ -114,11 +114,12 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	visited.add(process_name);
 
 	// Add entity in parent process as all entities must appear in the context diagram
-	let process = get_hierarchy_diagram(process_name);
-	if (cell.item_type == "entity" && process.parent_name)
-		add_item_to_subprocess(cell, process.parent_name, visited);
-
+	let parent = get_process_parent(process_name, hierarchy);
+	if (cell.item_type == "entity" && parent)
+	add_item_to_subprocess(cell, parent.name, visited);
+	
 	// Add item to current process
+	let process = get_hierarchy_diagram(process_name);
 	let current_graph = process.graph_model;
 	/* Skip if item is already in the graph */
 	if (
