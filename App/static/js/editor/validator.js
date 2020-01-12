@@ -138,30 +138,30 @@ function add_item_to_subprocess(cell, process_name, visited) {
 
 		/* Set flag that is from parent */
 		copy.value.setAttribute("from_parent", true);
-	}
 
-	/* Set required in and out flows for this item in the sub process */
-	let required_inflows = new Set();
-	let required_outflows = new Set();
-	(cell.edges || []).forEach(edge => {
-		let source_name = editor.graph.convertValueToString(edge.source);
-		let target_name = editor.graph.convertValueToString(edge.target);
-		if (source_name == process_name) required_inflows.add(edge.value);
-		else if (target_name == process_name) required_outflows.add(edge.value);
-	});
-	let cell_from_parent = find_cell_in_graph(
-		current_graph,
-		cell.value.getAttribute("label"),
-		cell.item_type
-	);
-	cell_from_parent.value.setAttribute(
-		"required_inflows",
-		JSON.stringify([...required_inflows])
-	);
-	cell_from_parent.value.setAttribute(
-		"required_outflows",
-		JSON.stringify([...required_outflows])
-	);
+		/* Set required in and out flows for this item in the sub process */
+		let required_inflows = new Set();
+		let required_outflows = new Set();
+		(cell.edges || []).forEach(edge => {
+			let source_name = editor.graph.convertValueToString(edge.source);
+			let target_name = editor.graph.convertValueToString(edge.target);
+			if (source_name == process_name) required_inflows.add(edge.value);
+			else if (target_name == process_name) required_outflows.add(edge.value);
+		});
+		let cell_from_parent = find_cell_in_graph(
+			current_graph,
+			cell.value.getAttribute("label"),
+			cell.item_type
+		);
+		cell_from_parent.value.setAttribute(
+			"required_inflows",
+			JSON.stringify([...required_inflows])
+		);
+		cell_from_parent.value.setAttribute(
+			"required_outflows",
+			JSON.stringify([...required_outflows])
+		);
+	}
 }
 
 function validate_cell_type(cell_type) {
