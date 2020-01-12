@@ -40,3 +40,12 @@
 #item_configurations {
     display: none;
 }
+
+.toolbar_item_container {
+    display: inline-block;
+    background-color: white;
+    text-align: center;
+    border: 1px solid #343A40;
+    border-radius: 5px;
+    margin: 0.5em;    
+}

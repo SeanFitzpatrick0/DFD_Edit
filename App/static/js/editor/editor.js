@@ -251,13 +251,16 @@ function add_toolbar_item(graph, toolbar, add_item, item_dimension, image) {
 	 * @param  {Object} item_dimension Width and Height of the item.
 	 * @param  {String} image Path to the image that will be added to the toolbar.
 	 */
-	// Create toolbar item image and add to toolbar
+	// Create toolbar item and add to toolbar
 	let img = document.createElement("img");
 	img.setAttribute("src", image);
 	img.style.width = `${item_dimension.width / 1.5}px`;
 	img.style.height = `${item_dimension.height / 1.5}px`;
 	img.title = "Drag this to the diagram";
-	toolbar.appendChild(img);
+	let div = document.createElement("div");
+	div.classList.add("toolbar_item_container");
+	div.appendChild(img);
+	toolbar.appendChild(div);
 
 	// Create drag event handler for item
 	/* Function that is executed when the image is dropped on the graph */
