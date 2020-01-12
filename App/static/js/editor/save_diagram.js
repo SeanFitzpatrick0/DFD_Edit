@@ -5,7 +5,6 @@ async function save_diagram_button_handler(save_url, save_method) {
 	 * @param  {String} save_method The HTTP request method to use.
 	 *      POST when creating a new graph, PUT updating an existing graph
 	 */
-
 	// Save current active graph
 	let [_, active_graph_name] = get_active_hierarchy_item_and_name();
 	save_current_graph(active_graph_name);
@@ -50,7 +49,6 @@ function serialize_dfd(diagram_hierarchy) {
 	 * @param  {Object} sub_hierarchy Hierarchy being serialized.
 	 * @returns Serialized Diagram
 	 */
-
 	// Serialize diagram to xml
 	let encoder = new mxCodec();
 	let result = encoder.encode(diagram_hierarchy.graph_model);
@@ -68,7 +66,6 @@ function save_current_graph(active_graph_name) {
 	 * Saves currently edited graph to diagram hierarchy.
 	 * @param  {String} active_graph_name Name of edit graph
 	 */
-
 	let current_graph = editor.graph;
 	/* Deep copy current graph */
 	let save_graph = new mxGraph();
@@ -81,4 +78,52 @@ function save_current_graph(active_graph_name) {
 	set_hierarchy_diagram(active_graph_name, {
 		new_model: save_graph
 	});
+}
+
+async function export_diagram_button_handler() {
+	/**
+	 * Makes export request and download of turtle RDF representation of DFD 
+	 */
+	// Serialize Data Flow Diagram
+	let dfd = serialize_dfd(hierarchy);
+
+	// Make export request
+	const export_url = "/diagram/export";
+	await fetch(export_url, {
+		method: "POST",
+		credentials: "same-origin",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ dfd })
+	})
+		.then(response => {
+			if (response.status != 200) alert("Error: Unable to export DFD");
+			else return response.json();
+		})
+		.then(json => {
+			// Download turtle rdf
+			if (json.success && json.rdf) {
+				let title = document.getElementById("diagram_title_input")
+					.value;
+				title = title.length > 0 ? title : "DFD";
+				download(`${title}.ttl`, json.rdf);
+			}
+		});
+}
+
+function download(filename, text) {
+	/**
+	 * Downloads file containing text content
+	 * @param  {String} filename Download filename.
+	 * @param  {String} text Content of the file.
+	 */
+	// Create download link
+	var link = document.createElement("a");
+	link.setAttribute(
+		"href",
+		"data:text/plain;charset=utf-8," + encodeURIComponent(text)
+	);
+	link.setAttribute("download", filename);
+
+	// Download
+	link.click();
 }

@@ -8,6 +8,7 @@ from App.utils import (get_diagram_editors, get_user_created_diagrams,
                        get_user_by_email, delete_diagram_by_id,
                        is_editor, is_author, load_hierarchy, save_graph,
                        add_edit, create_graph_and_children)
+from App.exporter import export_dfd
 from App import app, bcrypt, db
 
 
@@ -218,3 +219,10 @@ def create_diagram():
     add_edit(current_user.id, new_diagram.id, request.json['edit_message'])
 
     return {'success': True, 'diagram_url': url_for('editor', id=new_diagram.id)}
+
+
+@app.route('/diagram/export', methods=['POST'])
+@login_required
+def export_diagram():
+    rdf_export = export_dfd(request.json['dfd'])
+    return {'success': True, 'rdf': rdf_export}
