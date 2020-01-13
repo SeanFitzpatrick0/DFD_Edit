@@ -21,6 +21,11 @@ git clone https://github.com/SeanFitz1997/DFD_Edit
 cd DFD_Edit
 ```
 
+Install dependencies
+```
+pipenv install
+```
+
 Create Database
 ```
 python create_db.py

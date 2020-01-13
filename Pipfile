@@ -17,7 +17,6 @@ sqlalchemy = "*"
 rdflib = "*"
 beautifulsoup4 = "*"
 lxml = "*"
-urllib = "*"
 
 [requires]
 python_version = "3.6"
