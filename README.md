@@ -21,21 +21,6 @@ git clone https://github.com/SeanFitz1997/DFD_Edit
 cd DFD_Edit
 ```
 
-Set secret key environment variable.
-Create key
-```
-$ python
-Python 3.6.5 (v3.6.5:f59c0932b4, Mar 28 2018, 17:00:18) [MSC v.1900 64 bit (AMD64)] on win32
-Type "help", "copyright", "credits" or "license" for more information.
->>> import secrets
->>> secrets.token_urlsafe(16)
-'<your secret key>'
-```
-Set environment variable
-```
-export DFD_EDIT_SECRET_KEY="<your secret key>"
-```
-
 Create Database
 ```
 python create_db.py
