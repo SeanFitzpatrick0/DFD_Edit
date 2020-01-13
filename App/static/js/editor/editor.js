@@ -1,171 +1,3 @@
-// Global variables
-// TODO move globals to own file
-var editor;
-var hierarchy = {};
-
-// Global styles
-// TODO prevent ID connectable
-const ID_PERMISSION =
-	"editable=0;movable=0;resizable=0;cloneable=0;deletable=0;";
-const CONTAINER_STYLE =
-	"fillColor=white;strokeColor=#343a40;fontColor=#343a40;rounded=1;foldable=0;";
-const ID_STYLE =
-	"fillColor=#343a40;fontColor=white;strokeColor=#343a40;rounded=1;" +
-	ID_PERMISSION;
-const EDGE_STYLE = "edgeStyle=topToBottomEdgeStyle;";
-const entity_dimensions = {
-	width: 100,
-	height: 80
-};
-const process_dimensions = {
-	width: 120,
-	height: 120
-};
-const datastore_dimensions = {
-	width: 140,
-	height: 60
-};
-
-function main(editor_path, loaded_hierarchy) {
-	/**
-	 * Initializes editor. Creates editor, toolbar and diagram hierarchy.
-	 * Displays error message if browser is not supported.
-	 * @param  {String} editor_path Path to editor directory.
-	 * @param  {Object} loaded_hierarchy Existing Diagram hierarchy loaded from server.
-	 *		This is loaded into the hierarchy global data structure.
-	 		Null if creating a new DFD. New hierarchy will be created in this case 
-	 */
-
-	// Checks if browser is supported
-	if (!mxClient.isBrowserSupported()) {
-		mxUtils.error("This browser is not supported.", 200, false);
-	} else {
-		// Create Editor
-		let graph_container = document.getElementById("graph");
-		let toolbar_container = document.getElementById("toolbar_items");
-
-		editor = create_editor(
-			`${editor_path}/config/keyhandler-commons.xml`,
-			graph_container
-		);
-
-		create_toolbar(
-			editor.graph,
-			toolbar_container,
-			`${editor_path}/images`
-		);
-
-		create_hierarchy(loaded_hierarchy);
-
-		// Add graph select and add cell listener
-		// TODO refactor this event handler
-		editor.graph
-			.getSelectionModel()
-			.addListener(mxEvent.CHANGE, (sender, event) => {
-				/* Handel graph selection */
-				graph_select(sender, event);
-
-				/* Get cells added */
-				let active_process_name = get_active_hierarchy_item_and_name()[1];
-				let cells = event.getProperty("removed") || [];
-				cells.forEach(cell => {
-					/* Set flow item type and value */
-					if (cell.edge && !cell.item_type) {
-						cell.item_type = "flow";
-						cell.value = `flow_${Math.floor(Math.random() * 1000)}`;
-						cell.style = EDGE_STYLE;
-						editor.graph.refresh();
-					}
-
-					/* If edge connects an item to a sub process, add that item to the sub process */
-					if (cell.edge) {
-						["source", "target"].forEach(direction => {
-							/* Does sub process exist */
-							let item = cell[direction];
-							if (item.item_type == "process")
-								try {
-									let process_name = editor.graph.convertValueToString(
-										cell[direction]
-									);
-									let process = get_hierarchy_diagram(
-										process_name
-									);
-									/* Add the cell in the opposite direction to the sub process */
-									let opposite =
-										direction == "source"
-											? "target"
-											: "source";
-									add_item_to_subprocess(
-										cell[opposite],
-										process_name,
-										new Set()
-									);
-								} catch {}
-						});
-					}
-
-					/* If entity added, add it to all parent processes */
-					if (cell.item_type == "entity")
-						add_item_to_subprocess(
-							cell,
-							active_process_name,
-							new Set()
-						);
-				});
-
-				/* Save any changes of the current graph to the diagram hierarchy data structure */
-				save_current_graph(active_process_name);
-			});
-
-		// Add cell delete event listener
-		editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
-
-		// Add cell edit event listener
-		/* validation check before calling event */
-		mxGraphLabelChanged = mxGraph.prototype.labelChanged;
-		mxGraph.prototype.labelChanged = is_valid_label_change;
-		/* event handler */
-		editor.graph.addListener(mxEvent.LABEL_CHANGED, (sender, event) => {
-			let cell = event.getProperty("cell");
-			/* Update name of all occurrences */
-			if (
-				["entity", "process", "datastore", "flow"].includes(
-					cell.item_type
-				)
-			)
-				rename_all_occurrences(sender, event);
-
-			/* Update hierarchy list and data structure */
-			if (cell.item_type == "process")
-				update_hierarchy_name(sender, event);
-
-			/* Update required flows if flow renamed */
-			if (cell.item_type == "flow") {
-				let new_name = mxUtils.isNode(event.getProperty("value"))
-					? event.getProperty("value").getAttribute("label")
-					: event.getProperty("value");
-				let old_name = mxUtils.isNode(event.getProperty("old"))
-					? event.getProperty("old").getAttribute("label")
-					: event.getProperty("old");
-				update_flow_requirements(cell, old_name, new_name);
-			}
-		});
-
-		// Add cell resize event listener for processes
-		editor.graph.addListener(mxEvent.CELLS_RESIZED, (sender, event) => {
-			let parent = event.getProperty("cells")[0];
-			if (parent.item_type == "process") {
-				/* resize the width of the id to be the same as the parent */
-				let child = parent.children[0];
-				child.geometry.width = parent.geometry.width;
-			}
-		});
-
-		// Set flow and cell validation rules
-		set_validation_rules();
-	}
-}
-
 function create_editor(editor_config_path, graph_container) {
 	/**
 	 * Creates editor and initializes configurations.
@@ -204,6 +36,12 @@ function create_editor(editor_config_path, graph_container) {
 		else return cell.value;
 	};
 
+	// Add event listeners
+	add_event_listeners(editor);
+
+	// Set flow and cell validation rules
+	set_validation_rules(editor);
+
 	return editor;
 }
 
@@ -219,7 +57,7 @@ function create_toolbar(graph, toolbar_container, image_dir_path) {
 		graph,
 		toolbar_container,
 		add_entity_to_graph,
-		entity_dimensions,
+		ENTITY_DIMENSIONS,
 		`${image_dir_path}/entity.png`
 	);
 
@@ -228,7 +66,7 @@ function create_toolbar(graph, toolbar_container, image_dir_path) {
 		graph,
 		toolbar_container,
 		add_process_to_graph,
-		process_dimensions,
+		PROCESS_DIMENSIONS,
 		`${image_dir_path}/process.png`
 	);
 
@@ -237,7 +75,7 @@ function create_toolbar(graph, toolbar_container, image_dir_path) {
 		graph,
 		toolbar_container,
 		add_datastore_to_graph,
-		datastore_dimensions,
+		DATASTORE_DIMENSIONS,
 		`${image_dir_path}/datastore.png`
 	);
 }
@@ -297,6 +135,35 @@ function add_toolbar_item(graph, toolbar, add_item, item_dimension, image) {
 	drag_preview.setGuidesEnabled(true);
 }
 
+function add_event_listeners(editor) {
+	/**
+	 * Adds event listeners to the given editor
+	 * @param  {Object} editor The editor to add event listeners to
+	 */
+	// Add graph select, add and edit listener
+	editor.graph
+		.getSelectionModel()
+		.addListener(mxEvent.CHANGE, (sender, event) => {
+			/* Handel graph selection */
+			graph_select(sender, event);
+			/* Handel graph add or cell move */
+			graph_add_or_move(sender, event);
+		});
+
+	// Add cell delete event listener
+	editor.graph.addListener(mxEvent.REMOVE_CELLS, graph_delete);
+
+	// Add cell label edit event listener
+	/* validation check before calling event */
+	mxGraphLabelChanged = mxGraph.prototype.labelChanged;
+	mxGraph.prototype.labelChanged = is_valid_label_change;
+	/* event handler */
+	editor.graph.addListener(mxEvent.LABEL_CHANGED, cell_label_edit);
+
+	// Add cell resize event listener
+	editor.graph.addListener(mxEvent.CELLS_RESIZED, cell_resize);
+}
+
 function graph_select(sender, event) {
 	/**
 	 * Cell selection event handler.
@@ -327,6 +194,56 @@ function graph_select(sender, event) {
 	}
 
 	event.consume();
+}
+
+function graph_add_or_move(sender, event) {
+	/**
+	 * Cell add or move event handler.
+	 * @param  {Object} sender Sender of the event
+	 * @param  {Object} event Details about event
+	 */
+	/* Get cell add or moved */
+	let active_process_name = get_active_hierarchy_item_and_name()[1];
+	let cells = event.getProperty("removed") || [];
+	cells.forEach(cell => {
+		/* Set flow item type and value if added */
+		if (cell.edge && !cell.item_type) {
+			cell.item_type = "flow";
+			cell.value = `flow_${Math.floor(Math.random() * 1000)}`;
+			cell.style = EDGE_STYLE;
+			editor.graph.refresh();
+		}
+
+		/* If edge connects an item to a sub process, add that item to the sub process */
+		if (cell.edge) {
+			["source", "target"].forEach(direction => {
+				/* Does sub process exist */
+				let item = cell[direction];
+				if (item.item_type == "process")
+					try {
+						let process_name = editor.graph.convertValueToString(
+							cell[direction]
+						);
+						let process = get_hierarchy_diagram(process_name);
+						/* Add the cell in the opposite direction to the sub process */
+						let opposite =
+							direction == "source" ? "target" : "source";
+						add_item_to_subprocess(
+							cell[opposite],
+							process_name,
+							new Set()
+						);
+					} catch {}
+			});
+		}
+
+		/* If entity added, add it to all parent processes */
+		if (cell.item_type == "entity")
+			add_item_to_subprocess(cell, active_process_name, new Set());
+	});
+
+	/* Save any changes of the current graph to the diagram hierarchy data structure */
+	save_current_graph(active_process_name);
 }
 
 function graph_delete(sender, event) {
@@ -366,7 +283,6 @@ function graph_delete(sender, event) {
 						cell_name,
 						cell.item_type
 					);
-
 					/* Remove item from current graph */
 					remove_cell_from_graph(occurrence, graph, found_cell);
 				});
@@ -392,34 +308,43 @@ function graph_delete(sender, event) {
 	event.consume();
 }
 
-function update_editor_graph(target_graph) {
+function cell_label_edit(sender, event) {
 	/**
-	 * Replaces the current editor graph with target graph.
-	 * @param  {Object} target_graph New graph model
+	 * Cell label edit event handler.
+	 * @param  {Object} sender Sender of the event
+	 * @param  {Object} event Details about event
 	 */
+	let cell = event.getProperty("cell");
+	/* Update name of all occurrences */
+	if (["entity", "process", "datastore", "flow"].includes(cell.item_type))
+		rename_all_occurrences(sender, event);
 
-	// Get current graph
-	let current_graph = editor.graph;
+	/* Update hierarchy list and data structure */
+	if (cell.item_type == "process") update_hierarchy_name(sender, event);
 
-	// Update editor graph
-	var parent = current_graph.getDefaultParent();
-	current_graph.getModel().beginUpdate();
-	try {
-		// Removes all cells which are not in the current graph
-		for (var key in current_graph.getModel().cells) {
-			var tmp = current_graph.getModel().getCell(key);
+	/* Update required flows if flow renamed */
+	if (cell.item_type == "flow") {
+		let new_name = mxUtils.isNode(event.getProperty("value"))
+			? event.getProperty("value").getAttribute("label")
+			: event.getProperty("value");
+		let old_name = mxUtils.isNode(event.getProperty("old"))
+			? event.getProperty("old").getAttribute("label")
+			: event.getProperty("old");
+		update_flow_requirements(cell, old_name, new_name);
+	}
+}
 
-			if (current_graph.getModel().isVertex(tmp))
-				current_graph.removeCells([tmp]);
-		}
-
-		// Merges the current and target graphs
-		current_graph
-			.getModel()
-			.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
-	} finally {
-		current_graph.getModel().endUpdate();
-		current_graph.refresh();
+function cell_resize(sender, event) {
+	/**
+	 * Cell resize edit event handler.
+	 * @param  {Object} sender Sender of the event
+	 * @param  {Object} event Details about event
+	 */
+	let parent = event.getProperty("cells")[0];
+	if (parent.item_type == "process") {
+		/* resize the width of the id to be the same as the parent */
+		let child = parent.children[0];
+		child.geometry.width = parent.geometry.width;
 	}
 }
 
@@ -540,6 +465,36 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 
 	container.item_type = item_type;
 	return container;
+}
+
+function update_editor_graph(target_graph) {
+	/**
+	 * Replaces the current editor graph with target graph.
+	 * @param  {Object} target_graph New graph model
+	 */
+	// Get current graph
+	let current_graph = editor.graph;
+
+	// Update editor graph
+	var parent = current_graph.getDefaultParent();
+	current_graph.getModel().beginUpdate();
+	try {
+		// Removes all cells which are not in the current graph
+		for (var key in current_graph.getModel().cells) {
+			var tmp = current_graph.getModel().getCell(key);
+
+			if (current_graph.getModel().isVertex(tmp))
+				current_graph.removeCells([tmp]);
+		}
+
+		// Merges the current and target graphs
+		current_graph
+			.getModel()
+			.mergeChildren(target_graph.getRoot().getChildAt(0), parent);
+	} finally {
+		current_graph.getModel().endUpdate();
+		current_graph.refresh();
+	}
 }
 
 function find_cell_in_graph(graph, cell_name, cell_type) {

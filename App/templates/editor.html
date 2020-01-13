@@ -103,10 +103,11 @@
 <script src="{{ url_for('static', filename='js/editor/diagram_hierarchy.js') }}"></script>
 <!-- Editor -->
 <script src="{{ url_for('static', filename='js/editor/editor.js') }}"></script>
+<!-- Main -->
+<script src="{{ url_for('static', filename='js/editor/main.js') }}"></script>
 
 <!-- Create Editor -->
 <script>
-	// TODO change to parse as string
 	let loaded_hierarchy = {{hierarchy | tojson}};
 	main("{{ url_for('static', filename='js/editor') }}", loaded_hierarchy);
 </script>

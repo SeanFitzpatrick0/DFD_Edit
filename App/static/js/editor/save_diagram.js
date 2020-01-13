@@ -6,7 +6,7 @@ async function save_diagram_button_handler(save_url, save_method) {
 	 *      POST when creating a new graph, PUT updating an existing graph
 	 */
 	// Save current active graph
-	let [_, active_graph_name] = get_active_hierarchy_item_and_name();
+	let active_graph_name = get_active_hierarchy_item_and_name()[1];
 	save_current_graph(active_graph_name);
 
 	// Serialize Data Flow Diagram
@@ -16,14 +16,11 @@ async function save_diagram_button_handler(save_url, save_method) {
 	// Get edit message
 	let edit_message = document.getElementById("edit_message_input").value;
 
-	// Make request
-	// TODO provide better error alerting
+	// Make save request
 	fetch(save_url, {
 		method: save_method,
 		credentials: "same-origin",
-		headers: {
-			"Content-Type": "application/json"
-		},
+		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			title: title,
 			dfd: dfd,
@@ -31,10 +28,8 @@ async function save_diagram_button_handler(save_url, save_method) {
 		})
 	})
 		.then(response => {
-			if (response.status != 200) {
-				// Alert Error
-				alert("Error: Unable to save diagram");
-			} else return response.json();
+			if (response.status != 200) alert("Error: Unable to save diagram");
+			else return response.json();
 		})
 		.then(json => {
 			// Redirect if created new diagram
@@ -82,7 +77,7 @@ function save_current_graph(active_graph_name) {
 
 async function export_diagram_button_handler() {
 	/**
-	 * Makes export request and download of turtle RDF representation of DFD 
+	 * Makes export request and download of turtle RDF representation of DFD
 	 */
 	// Serialize Data Flow Diagram
 	let dfd = serialize_dfd(hierarchy);

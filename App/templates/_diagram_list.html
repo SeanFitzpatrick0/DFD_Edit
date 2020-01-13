@@ -10,7 +10,6 @@ diagram_list(title, user, diagrams) %}
 	<!-- List Items -->
 	{% if diagrams[0] is defined %}
 	<ul class="list-group list-group-flush">
-		<!-- TODO use is author -->
 		{% for diagram in diagrams %} {% set user_created_diagram = user.id ==
 		diagram.author %}
 

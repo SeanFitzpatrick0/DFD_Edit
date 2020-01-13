@@ -6,7 +6,7 @@ function create_hierarchy(loaded_hierarchy) {
 	 */
 	if (!loaded_hierarchy) {
 		// Add starting diagram
-		let starting_diagram_name = "Context diagram"; // TODO make this global
+		let starting_diagram_name = "Context diagram";
 		add_to_hierarchy(starting_diagram_name, null, null);
 	} else {
 		load_hierarchy(loaded_hierarchy, null);
@@ -67,7 +67,6 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	 * @param  {String} process_id ID of the process
 	 * @throws exception if diagram name already in hierarchy or if name is empty.
 	 */
-
 	// Validate inputs
 	/* Check name not empty */
 	if (!name || name.length == 0)
@@ -111,7 +110,6 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	let hierarchy_item_html = `
 		<li id="${id_name}_hierarchy_item" class="list-group-item">
 			<p class="hierarchy_item_title">${name}</p>
-			<ul id="${id_name}_children"></ul>
 		</li>
 	`;
 	/* add element to html document */
@@ -129,7 +127,6 @@ function remove_from_hierarchy(name) {
 	 * @param  {String} name Name of diagram to remove.
 	 * @throws exception if diagram is not in hierarchy
 	 */
-
 	// Validate inputs
 	/* Check name not empty */
 	if (!name || name.length == 0)
@@ -140,7 +137,6 @@ function remove_from_hierarchy(name) {
 	} catch {
 		return;
 	}
-
 	// Remove from html hierarchy list
 	let id_name = name.replace(/[ ]/g, "_"); // replace spaces with underscore
 	document.getElementById(`${id_name}_hierarchy_item`).remove();
@@ -156,11 +152,9 @@ function get_hierarchy_diagram(name) {
 	 * @returns The found diagram.
 	 * @throws exception if diagram not in hierarchy.
 	 */
-
 	let search_hierarchy = _get_hierarchy_diagram_helper(hierarchy, name);
 	if (!search_hierarchy)
 		throw `Error: Couldn't find ${name} in diagram hierarchy.`;
-
 	return search_hierarchy;
 }
 

@@ -82,7 +82,6 @@ function update_ids(parent_id, graph) {
 						);
 					} catch {}
 				});
-
 				counter++;
 			}
 		}
@@ -116,8 +115,8 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	// Add entity in parent process as all entities must appear in the context diagram
 	let parent = get_process_parent(process_name, hierarchy);
 	if (cell.item_type == "entity" && parent)
-	add_item_to_subprocess(cell, parent.name, visited);
-	
+		add_item_to_subprocess(cell, parent.name, visited);
+
 	// Add item to current process
 	let process = get_hierarchy_diagram(process_name);
 	let current_graph = process.graph_model;
@@ -146,7 +145,8 @@ function add_item_to_subprocess(cell, process_name, visited) {
 			let source_name = editor.graph.convertValueToString(edge.source);
 			let target_name = editor.graph.convertValueToString(edge.target);
 			if (source_name == process_name) required_inflows.add(edge.value);
-			else if (target_name == process_name) required_outflows.add(edge.value);
+			else if (target_name == process_name)
+				required_outflows.add(edge.value);
 		});
 		let cell_from_parent = find_cell_in_graph(
 			current_graph,
@@ -262,7 +262,6 @@ function is_valid_entity_name(name) {
 	 * @return {Boolean} If the new name is valid
 	 * @return {String}  Error message if not valid
 	 */
-	// TODO clarify if going to allow multiple entity names
 	// Validate name input
 	if (!name || name.length == 0)
 		return [false, "Unable to have null or empty name"];
@@ -384,9 +383,10 @@ function update_flow_requirements(cell, old_name, new_name) {
 	});
 }
 
-function set_validation_rules() {
+function set_validation_rules(editor) {
 	/**
 	 * Sets validation rules for flows and set graph validation on change listener
+	 * @param {Object} editor The editor that the rules are being added to
 	 */
 	// A flow can't directly connect 2 entities
 	editor.graph.multiplicities.push(
