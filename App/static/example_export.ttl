@@ -1,0 +1,48 @@
+@prefix dfd: <https://w3id.org/dfdf/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.example.org/test#f0> a dfd:DataFlow ;
+    rdfs:label "C" ;
+    dfd:from <http://www.example.org/test#Y1> ;
+    dfd:to <http://www.example.org/test#Y2> .
+
+<http://www.example.org/test#f1> a dfd:DataFlow ;
+    rdfs:label "A" ;
+    dfd:from <http://www.example.org/test#X> ;
+    dfd:to <http://www.example.org/test#Y> .
+
+<http://www.example.org/test#f2> a dfd:DataFlow ;
+    rdfs:label "B" ;
+    dfd:from <http://www.example.org/test#Y2> ;
+    dfd:to <http://www.example.org/test#Z> .
+
+<http://www.example.org/test#f3> a dfd:DataFlow ;
+    rdfs:label "B" ;
+    dfd:from <http://www.example.org/test#Y> ;
+    dfd:to <http://www.example.org/test#Z> .
+
+<http://www.example.org/test#f4> a dfd:DataFlow ;
+    rdfs:label "A" ;
+    dfd:from <http://www.example.org/test#X> ;
+    dfd:to <http://www.example.org/test#Y1> .
+
+<http://www.example.org/test#X> a dfd:Interface ;
+    rdfs:label "X" .
+
+<http://www.example.org/test#Y1> a dfd:Process ;
+    rdfs:label "Y1" ;
+    dfd:subProcessOf <http://www.example.org/test#Y> .
+
+<http://www.example.org/test#Y2> a dfd:Process ;
+    rdfs:label "Y2" ;
+    dfd:subProcessOf <http://www.example.org/test#Y> .
+
+<http://www.example.org/test#Z> a dfd:Interface ;
+    rdfs:label "Z" .
+
+<http://www.example.org/test#Y> a dfd:Process ;
+    rdfs:label "Y" .
+
