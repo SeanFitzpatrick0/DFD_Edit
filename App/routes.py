@@ -171,8 +171,10 @@ def invite_editor(diagram_id):
         invited_user = get_user_by_email(invite_editor_form.email.data)
 
         if current_user.id == invited_user.id:
-            flash('Unable to add youself as an editor.', 'danger')
-
+            flash('Unable to add youself as an editor.', 'warning')
+        elif invited_user in get_diagram_editors(diagram_id):
+            flash(
+                f'User {invited_user.username} is already invited to diagram.', 'warning')
         else:
             invite = Invitation(invited_user=invited_user.id,
                                 invited_to=diagram_id)
