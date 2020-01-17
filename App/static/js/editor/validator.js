@@ -546,3 +546,66 @@ function can_add_to_context_diagram(item_type) {
 		}
 	return true;
 }
+
+function is_dfd_valid(hierarchy) {
+	/**
+	 * Validates that the DFD is valid
+	 * @param {Object} hierarchy The DFD data structure
+	 * @return {Boolean} If the DFD is valid
+	 * @return {String}  Error message if not valid
+	 */
+	// Validate Context Diagram
+	if (hierarchy.name == "Context diagram") {
+		let result = is_valid_context_diagram(hierarchy.graph_model);
+		if (!result[0]) return result;
+	}
+
+	// Validate all sub processes
+	let queue = [hierarchy];
+	while (queue.length > 0) {
+		/* Validate sub process */
+		let current_process = queue.pop();
+		let current_graph = new mxGraph(null, current_process.graph_model);
+		if (current_graph.validateGraph() != null)
+			return [false, `Sub process ${current_process.name} is invalid.`];
+		/* Add children to queue */
+		queue = queue.concat(current_process.children);
+	}
+
+	return [true];
+}
+
+function is_valid_context_diagram(graph) {
+	/**
+	 * Validates that the Context diagram is valid
+	 * @param {Object} graph graph model of the context diagram
+	 * @return {Boolean} If the context diagram is valid
+	 * @return {String}  Error message if not valid
+	 */
+	let cells = Object.keys(graph.cells).map(key => graph.cells[key]);
+
+	// Has one process
+	let process_count = cells.reduce((count, cell) => {
+		if (cell.item_type == "process") return ++count;
+		return count;
+	}, 0);
+	if (process_count != 1)
+		return [
+			false,
+			`Context diagram needs 1 process but has ${process_count}.`
+		];
+
+	// Has diagram got a source and sink entity
+	let [has_source, has_sink] = ["source", "target"].map(direction =>
+		cells.some(cell => {
+			/* Do any edges of the cell have a entity in that direction */
+			return (cell.edges || []).some(
+				edge => edge[direction].item_type == "entity"
+			);
+		})
+	);
+	if (!has_source) return [false, "Context diagram has no source entity"];
+	else if (!has_sink) return [false, "Context diagram has no sink entity"];
+
+	return [true];
+}

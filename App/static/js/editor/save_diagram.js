@@ -88,6 +88,13 @@ async function export_diagram_button_handler() {
 	/**
 	 * Makes export request and download of turtle RDF representation of DFD
 	 */
+	// Confirm DFD is valid
+	let validation_result = is_dfd_valid(hierarchy);
+	if (!validation_result[0]) {
+		alert(`Error: ${validation_result[1]}`);
+		return;
+	}
+
 	// Serialize Data Flow Diagram
 	let dfd = serialize_dfd(hierarchy);
 
