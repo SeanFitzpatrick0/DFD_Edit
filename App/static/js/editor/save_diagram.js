@@ -1,3 +1,12 @@
+function show_save_modal() {
+	/**
+	 * Opens save model if DFD has title or alerts users to add title if not
+	 */
+	let title = document.getElementById("diagram_title_input").value;
+	if (!title) alert("Please give DFD a title before saving.");
+	else $("#save_modal").modal("toggle");
+}
+
 async function save_diagram_button_handler(save_url, save_method) {
 	/**
 	 * Saves Data Flow Diagram to server
