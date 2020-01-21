@@ -33,13 +33,16 @@ def collect_items(hierarchy):
     graph = BeautifulSoup(hierarchy['xml_model'], 'lxml')
 
     for entity in graph.find_all('entity'):
-        entities.add(entity.get('label'))
+        if not entity.get('from_parent'):
+            entities.add(entity.get('label'))
 
     for process in graph.find_all('process'):
-        processes[process.get('label')] = parent
+        if not process.get('from_parent'):
+            processes[process.get('label')] = parent
 
     for datastore in graph.find_all('datastore'):
-        datastores.add(datastore.get('label'))
+        if not entity.get('from_parent'):
+            datastores.add(datastore.get('label'))
 
     for flow in graph.find_all('mxcell', {"item_type": "flow"}):
         label = flow.get('value')
