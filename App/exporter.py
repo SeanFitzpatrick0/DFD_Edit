@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 # Define name spaces
 BASE = Namespace('http://www.example.org/test#')
-DFD = Namespace('https://w3id.org/dfdf/')
+DFD = Namespace('https://w3id.org/dfd/')
 
 
 def export_dfd(dfd):
