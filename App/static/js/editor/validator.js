@@ -108,15 +108,6 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	 * @param  {Set} visited Set of the names of already visited processes
 	 * 					Used to prevent cycles when traversing the DFD
 	 */
-	// Check if already visited
-	if (visited.has(process_name)) return;
-	visited.add(process_name);
-
-	// Add entity in parent process as all entities must appear in the context diagram
-	let parent = get_process_parent(process_name, hierarchy);
-	if (cell.item_type == "entity" && parent)
-		add_item_to_subprocess(cell, parent.name, visited);
-
 	// Add item to current process
 	let process = get_hierarchy_diagram(process_name);
 	let current_graph = process.graph_model;

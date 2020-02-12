@@ -236,10 +236,6 @@ function graph_add_or_move(sender, event) {
 					} catch {}
 			});
 		}
-
-		/* If entity added, add it to all parent processes */
-		if (cell.item_type == "entity")
-			add_item_to_subprocess(cell, active_process_name, new Set());
 	});
 
 	/* Save any changes of the current graph to the diagram hierarchy data structure */
@@ -445,6 +441,13 @@ function add_entity_to_graph(parent, graph, x, y, dimensions) {
 	 * Adds entity to graph
 	 */
 	const item_type = "entity";
+
+	/* is valid placement */
+	if (get_active_hierarchy_item_and_name()[1] !== "Context diagram") {
+		alert("Entities must be placed in the Context diagram");
+		return null;
+	}
+
 	let doc = mxUtils.createXmlDocument();
 	let node = doc.createElement(item_type);
 	node.setAttribute(
