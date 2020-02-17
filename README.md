@@ -6,6 +6,8 @@ Users can Invite others to collaborate on their DFDs and Export their DFD to an 
 
 This tool was created as part of my Final Year Project at Trinity College Dublin. My project is to investigate **Linked Data** representations of DFDs and how they can be used for automatic compliance validation of systems.
 
+See live site [here](http://ec2-3-94-114-101.compute-1.amazonaws.com/)
+
 ## Screen Shots
 
 ### Home page
