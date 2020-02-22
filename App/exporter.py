@@ -41,7 +41,7 @@ def collect_items(hierarchy):
             processes[process.get('label')] = parent
 
     for datastore in graph.find_all('datastore'):
-        if not entity.get('from_parent'):
+        if not datastore.get('from_parent'):
             datastores.add(datastore.get('label'))
 
     for flow in graph.find_all('mxcell', {"item_type": "flow"}):
@@ -54,7 +54,7 @@ def collect_items(hierarchy):
     for child in hierarchy['children']:
         _, sub_processes, sub_datastores, sub_dataflows = collect_items(child)
         processes.update(sub_processes)
-        sub_datastores.update(sub_datastores)
+        datastores.update(sub_datastores)
         dataflows.update(sub_dataflows)
 
     return entities, processes, datastores, dataflows
