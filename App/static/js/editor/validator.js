@@ -9,8 +9,8 @@ function create_id(parent_id, id_ending, item_type) {
 	 * @return {String} New Process ID.
 	 */
 	// ID for the system process
-	if (parent_id == null)
-		if (item_type == "datastore")
+	if (parent_id === null)
+		if (item_type === "datastore")
 			throw "Error: A datastore ID cant be created for the context diagram the Contextual Diagram.";
 		else return "0";
 
@@ -19,7 +19,7 @@ function create_id(parent_id, id_ending, item_type) {
 		let graph_cells = editor.graph.getModel().cells;
 		let item_cells = [];
 		for (cell in graph_cells)
-			if (graph_cells[cell].item_type == item_type) item_cells.push(cell);
+			if (graph_cells[cell].item_type === item_type) item_cells.push(cell);
 		// Filter out cells that belong to parent processes
 		if (parent_id && parent_id != "0")
 			item_cells = item_cells.filter(cell_index => {
@@ -29,11 +29,11 @@ function create_id(parent_id, id_ending, item_type) {
 		id_ending = item_cells.length + 1;
 	}
 
-	if (parent_id == "0")
-		return `${item_type == "datastore" ? "D" : ""}${id_ending}`;
+	if (parent_id === "0")
+		return `${item_type === "datastore" ? "D" : ""}${id_ending}`;
 	else
 		return `${
-			item_type == "datastore" ? "D" : ""
+			item_type === "datastore" ? "D" : ""
 		}${parent_id}.${id_ending}`;
 }
 
@@ -51,7 +51,7 @@ function update_ids(parent_id, graph) {
 			let cell = graph.cells[key];
 			let cell_name = editor.graph.convertValueToString(cell);
 			if (
-				cell.item_type == item_type &&
+				cell.item_type === item_type &&
 				!is_cell_from_parent_process(cell)
 			) {
 				// Update id in all occurrences
@@ -65,7 +65,7 @@ function update_ids(parent_id, graph) {
 					// Update id of current graph
 					let process = get_hierarchy_diagram(occurrence);
 					let graph =
-						occurrence == active_graph_name
+						occurrence === active_graph_name
 							? editor.graph.getModel()
 							: process.graph_model;
 					let cell = find_cell_in_graph(graph, cell_name, item_type);
@@ -135,8 +135,8 @@ function add_item_to_subprocess(cell, process_name, visited) {
 	(cell.edges || []).forEach(edge => {
 		let source_name = editor.graph.convertValueToString(edge.source);
 		let target_name = editor.graph.convertValueToString(edge.target);
-		if (source_name == process_name) required_inflows.add(edge.value);
-		else if (target_name == process_name)
+		if (source_name === process_name) required_inflows.add(edge.value);
+		else if (target_name === process_name)
 			required_outflows.add(edge.value);
 	});
 	let cell_from_parent = find_cell_in_graph(
@@ -182,7 +182,7 @@ function is_valid_label_change(cell, value, evt) {
 		["flow", is_valid_flow_name]
 	].forEach(inputs => {
 		let [item_type, validation_function] = inputs;
-		if (cell.item_type == item_type) {
+		if (cell.item_type === item_type) {
 			let validation_result = validation_function(value, cell);
 			if (validation_result[0]) {
 				if (mxUtils.isNode(cell.value)) {
@@ -207,7 +207,7 @@ function is_valid_process_name(name) {
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate name input
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		return [false, "Unable to have null or empty name"];
 
 	// Validate is not already in DFD
@@ -230,7 +230,7 @@ function is_valid_datastore_name(name) {
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate name input
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		return [false, "Unable to have null or empty name"];
 
 	// Validate not already in DFD
@@ -253,7 +253,7 @@ function is_valid_entity_name(name) {
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate name input
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		return [false, "Unable to have null or empty name"];
 	return [true];
 }
@@ -267,7 +267,7 @@ function is_valid_flow_name(name, cell) {
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate name input
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		return [false, "Unable to have null or empty name"];
 	return [true];
 }
@@ -466,7 +466,7 @@ function set_validation_rules(editor) {
 		/* All cells must be connected with at least one flow */
 		if (
 			mxUtils.isNode(cell.value) &&
-			(!cell.edges || cell.edges.length == 0)
+			(!cell.edges || cell.edges.length === 0)
 		)
 			errors += "Item needs to be connected with a flow.\n";
 
@@ -480,7 +480,7 @@ function set_validation_rules(editor) {
 			let cell_inflows = new Set();
 			let cell_outflows = new Set();
 			(cell.edges || []).forEach(edge => {
-				if (edge.source == cell) cell_outflows.add(edge.value);
+				if (edge.source === cell) cell_outflows.add(edge.value);
 				else cell_inflows.add(edge.value);
 			});
 
@@ -492,7 +492,7 @@ function set_validation_rules(editor) {
 					JSON.parse(cell.value.getAttribute(flow))
 				);
 				let cell_flows =
-					flow == "required_inflows" ? cell_inflows : cell_outflows;
+					flow === "required_inflows" ? cell_inflows : cell_outflows;
 
 				/* Does cell have the correct number of flows */
 				if (required_flows.size != cell_flows.size)
@@ -518,16 +518,16 @@ function can_add_to_context_diagram(item_type) {
 	 * @return {Boolean} true if valid placement, otherwise false
 	 */
 	// Is placing item in Context Diagram
-	if (get_active_hierarchy_item_and_name()[1] == "Context diagram")
-		if (item_type == "datastore") {
+	if (get_active_hierarchy_item_and_name()[1] === "Context diagram")
+		if (item_type === "datastore") {
 			// Is item a datastore
 			alert("Data stores must not appear in the Context diagram.");
 			return false;
-		} else if (item_type == "process") {
+		} else if (item_type === "process") {
 			// Has a process already been placed
 			let cells = editor.graph.getModel().cells;
 			for (let i in cells)
-				if (cells[i].item_type == "process") {
+				if (cells[i].item_type === "process") {
 					alert(
 						"Only one process can be placed in the Context diagram."
 					);
@@ -545,7 +545,7 @@ function is_dfd_valid(hierarchy) {
 	 * @return {String}  Error message if not valid
 	 */
 	// Validate Context Diagram
-	if (hierarchy.name == "Context diagram") {
+	if (hierarchy.name === "Context diagram") {
 		let result = is_valid_context_diagram(hierarchy.graph_model);
 		if (!result[0]) return result;
 	}
@@ -576,7 +576,7 @@ function is_valid_context_diagram(graph) {
 
 	// Has one process
 	let process_count = cells.reduce((count, cell) => {
-		if (cell.item_type == "process") return ++count;
+		if (cell.item_type === "process") return ++count;
 		return count;
 	}, 0);
 	if (process_count != 1)
@@ -590,7 +590,7 @@ function is_valid_context_diagram(graph) {
 		cells.some(cell => {
 			/* Do any edges of the cell have a entity in that direction */
 			return (cell.edges || []).some(
-				edge => edge[direction].item_type == "entity"
+				edge => edge[direction].item_type === "entity"
 			);
 		})
 	);

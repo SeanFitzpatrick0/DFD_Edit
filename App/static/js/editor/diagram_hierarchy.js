@@ -69,7 +69,7 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	 */
 	// Validate inputs
 	/* Check name not empty */
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		throw "Error: Can't add a diagram with no name to hierarchy.";
 	/* Check if diagram is already in hierarchy */
 	let found_diagram = false;
@@ -92,7 +92,7 @@ function add_to_hierarchy(name, parent_name, process_id) {
 	};
 
 	let parent_id;
-	if (!parent_name || name.length == 0) {
+	if (!parent_name || name.length === 0) {
 		// Create starting hierarchy
 		hierarchy = entry;
 		parent_id = "hierarchy_list";
@@ -129,7 +129,7 @@ function remove_from_hierarchy(name) {
 	 */
 	// Validate inputs
 	/* Check name not empty */
-	if (!name || name.length == 0)
+	if (!name || name.length === 0)
 		throw "Error: Can't remove a diagram with no name.";
 	/* Check if diagram is in hierarchy */
 	try {
@@ -190,7 +190,7 @@ function _get_hierarchy_diagram_helper(sub_hierarchy, name) {
 	 * @returns Diagram entry if found otherwise null.
 	 */
 	// Check for match
-	if (name == sub_hierarchy.name) return sub_hierarchy;
+	if (name === sub_hierarchy.name) return sub_hierarchy;
 
 	// Search each child
 	let search_result = null;
@@ -228,7 +228,7 @@ function get_process_parent(name, hierarchy) {
 	 */
 	let found_parent = null;
 	hierarchy.children.forEach(child => {
-		if (child.name == name) found_parent = hierarchy;
+		if (child.name === name) found_parent = hierarchy;
 		else {
 			let search_parent = get_process_parent(name, child);
 			if (search_parent) found_parent = search_parent;
@@ -277,7 +277,7 @@ function switch_graph(event) {
 	update_editor_graph(target_graph);
 }
 
-function add_diagram_button_handler() {
+function add_sub_diagram_button_handler() {
 	/**
 	 * Add sub-diagram button handler.
 	 * Adds new sub-diagram for selected process.

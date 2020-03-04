@@ -173,7 +173,7 @@ function graph_select(sender, event) {
 	// Get selected cells
 	let cells = event.getProperty("removed");
 
-	if (cells && cells.length == 1 && cells[0].item_type == "process") {
+	if (cells && cells.length === 1 && cells[0].item_type === "process") {
 		// Single process selected
 		let cell = cells[0];
 
@@ -219,7 +219,7 @@ function graph_add_or_move(sender, event) {
 			["source", "target"].forEach(direction => {
 				/* Does sub process exist */
 				let item = cell[direction];
-				if (item.item_type == "process")
+				if (item.item_type === "process")
 					try {
 						let process_name = editor.graph.convertValueToString(
 							cell[direction]
@@ -227,7 +227,7 @@ function graph_add_or_move(sender, event) {
 						let process = get_hierarchy_diagram(process_name);
 						/* Add the cell in the opposite direction to the sub process */
 						let opposite =
-							direction == "source" ? "target" : "source";
+							direction === "source" ? "target" : "source";
 						add_item_to_subprocess(
 							cell[opposite],
 							process_name,
@@ -284,7 +284,7 @@ function graph_delete(sender, event) {
 				});
 
 				// If process and in hierarchy remove
-				if (cell.item_type == "process")
+				if (cell.item_type === "process")
 					remove_from_hierarchy(cell_name);
 
 				// Is cell from parent process
@@ -316,10 +316,10 @@ function cell_label_edit(sender, event) {
 		rename_all_occurrences(sender, event);
 
 	/* Update hierarchy list and data structure */
-	if (cell.item_type == "process") update_hierarchy_name(sender, event);
+	if (cell.item_type === "process") update_hierarchy_name(sender, event);
 
 	/* Update required flows if flow renamed */
-	if (cell.item_type == "flow") {
+	if (cell.item_type === "flow") {
 		let new_name = mxUtils.isNode(event.getProperty("value"))
 			? event.getProperty("value").getAttribute("label")
 			: event.getProperty("value");
@@ -337,7 +337,7 @@ function cell_resize(sender, event) {
 	 * @param  {Object} event Details about event
 	 */
 	let parent = event.getProperty("cells")[0];
-	if (parent.item_type == "process") {
+	if (parent.item_type === "process") {
 		/* resize the width of the id to be the same as the parent */
 		let child = parent.children[0];
 		child.geometry.width = parent.geometry.width;
@@ -515,8 +515,8 @@ function find_cell_in_graph(graph, cell_name, cell_type) {
 	// Find cell in graph
 	for (key in graph.cells)
 		if (
-			graph.cells[key].item_type == cell_type &&
-			editor.graph.convertValueToString(graph.cells[key]) == cell_name
+			graph.cells[key].item_type === cell_type &&
+			editor.graph.convertValueToString(graph.cells[key]) === cell_name
 		)
 			return graph.cells[key];
 	return null;
@@ -537,13 +537,13 @@ function find_connecting_cells(cell, cell_type) {
 	connected_cells = [];
 	(cell.edges || []).forEach(edge => {
 		["target", "source"].forEach(direction => {
-			let same_type = edge[direction].item_type == cell_type;
+			let same_type = edge[direction].item_type === cell_type;
 			let not_same_item =
 				edge[direction].getAttribute("label") !=
 					cell.value.getAttribute("label") ||
 				edge[direction].item_type != cell.item_type;
 			if (
-				(cell_type == null && not_same_item) ||
+				(cell_type === null && not_same_item) ||
 				(same_type && not_same_item)
 			)
 				connected_cells.push(edge[direction]);
@@ -586,7 +586,7 @@ function handel_flow_delete(cell) {
 			// Remove the required in/out flow of the item connected to the sub process
 			/* Get the cell at both sides of the edge */
 			let opposite_direction =
-				direction == "target" ? "source" : "target";
+				direction === "target" ? "source" : "target";
 			let process_cell = cell[direction];
 			let opposite_cell = cell[opposite_direction];
 			let process_name = editor.graph.convertValueToString(process_cell);
@@ -630,7 +630,7 @@ function handel_flow_delete(cell) {
 				if (
 					flow_requirements.every(
 						requirement =>
-							found_cell.value.getAttribute(requirement) == "[]"
+							found_cell.value.getAttribute(requirement) === "[]"
 					)
 				)
 					remove_cell_from_graph(occurrence, graph, found_cell);
