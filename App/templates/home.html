@@ -8,17 +8,20 @@
             their systems.
         </p>
         <p class="lead text-heading">
-            Users can <b>Invite</b> others to collaborate on their DFDs
+            Users can Invite others to collaborate on their DFDs
             and Export their DFD to an
-            <a href="https://www.w3.org/RDF/" target="_blank">RDF</a> representation in
-            <a href="https://www.w3.org/TR/turtle/" target="_blank">Turtle</a>.</p>
+            <a href="https://www.w3.org/RDF/" target="_blank">RDF</a> representation as
+            <a href="https://www.w3.org/TR/turtle/" target="_blank">TURTLE</a>.</p>
         <p class="lead text-heading">
             This tool was created as part of my Final Year Project at
             <a href="https://www.scss.tcd.ie/" target="_blank">Trinity College Dublin</a>.
             My project is to investigate <b>Linked Data</b> representations of DFDs
-            and how they can be used for automatic compliance validation of systems.
-            See <a href="https://github.com/SeanFitz1997/DFD_Edit" target="_blank">here</a>
-            for more information.
+            and how they can integrate with aspects of GDPR to aid in building compliant systems. 
+            See <a href="https://github.com/SeanFitz1997/DFD_EDIT_usecase_extension">here</a> for the extension for GDPR-aware DFD modelling. 
+        </p>
+        <p class="lead text-heading">
+            See <a href="https://github.com/SeanFitz1997/DFD_EDIT_usecase_extension" target="_blank">here</a>
+            for more information in the report and the source code.
         </p>
         <p>
             <a href="{{ url_for('register') }}" class="btn btn-primary my-2">Create account</a>
@@ -28,63 +31,70 @@
 </section>
 
 <!-- Walk through Gif -->
-<div class="row justify-content-md-center">
-    <img width="60%" src="{{ url_for('static', filename='img/create_dfd_demo.gif') }}" alt="create dfd demo"
-        class="img-thumbnail" />
+<div class="container">
+
+    <div class="row justify-content-md-center">
+        <img width="60%" src="{{ url_for('static', filename='img/create_dfd_demo.gif') }}" alt="create dfd demo"
+            class="img-thumbnail" />
+    </div>
 </div>
 <br />
 
 <!-- Getting Started -->
 <div class="text-center">
-    <h3>Getting started</h3>
+    <h3>Getting Started</h3>
 </div>
 
-<div id="getting_started" class="row justify-content-md-center">
-    <div class="col-9">
-        <ul class="list-group list-group-flush p-3">
-            <li class="list-group-item">
-                Create an <a href="{{ url_for('register') }}">account</a> to start creating diagrams.
-            </li>
-            <li class="list-group-item">
-                Once you have an account, go to the <a href="{{ url_for('editor') }}">editor</a>
-                page and begin to create a diagram by dragging items from the toolbar.
-            </li>
-            <li class="list-group-item">
-                Give your diagram a title by entering a value in the top text
-                bar. This can be changed at any time by changing this value and
-                saving the diagram.
-            </li>
-            <li class="list-group-item">
-                Save your progress by pressing the save button and entering an
-                edit comment. You can view the edit logs and authors of edits in
-                your account page.
-            </li>
-            <li class="list-group-item">
-                Decompose a process by selecting it and pressing the add sub
-                process on the toolbar.
-                This will add that sub process to the diagram hierarchy on the right.
-                Switch diagrams by selecting it from the Diagram hierarchy.
-            </li>
-            <li class="list-group-item">
-                View any validation errors by hovering your mouse over the alert
-                sign by any invalid cells. This will tell you why the cell is
-                invalid and how to fix it.
-            </li>
-            <li class="list-group-item">
-                You can see your created diagrams and diagrams that you have
-                been invited to on your <a href="{{ url_for('account') }}">account</a> page.
-                By selecting 'Manage Diagram' under any diagram you can view the creator of the
-                diagram and its editors, invite new editors remove existing
-                editors, and view the edit log for the diagram.
-            </li>
-            <li class="list-group-item">
-                You can export an RDF representation of your diagram in turtle
-                format by pressing the export button on the editor page. This
-                will download a .ttl file containing the RDF representation. See
-                an example output file
-                <a href="{{ url_for('static', filename='example_export.ttl') }}">here</a>.
-            </li>
-        </ul>
+<div class="container">
+
+
+    <div id="getting_started" class="row justify-content-md-center">
+        <div class="col-8">
+            <ul class="list-group list-group-flush p-3">
+                <li class="list-group-item">
+                    Create an <a href="{{ url_for('register') }}">account</a> to start creating diagrams.
+                </li>
+                <li class="list-group-item">
+                    Once you have an account, go to the <a href="{{ url_for('editor') }}">editor</a>
+                    page and begin to create a diagram by dragging items from the toolbar.
+                </li>
+                <li class="list-group-item">
+                    Give your diagram a title by entering a value in the top text
+                    bar. This can be changed at any time by changing this value and
+                    saving the diagram.
+                </li>
+                <li class="list-group-item">
+                    Save your progress by pressing the save button and entering an
+                    edit comment. You can view the edit logs and authors of edits in
+                    your account page.
+                </li>
+                <li class="list-group-item">
+                    Decompose a process by selecting it and pressing the add sub
+                    process on the toolbar.
+                    This will add that sub process to the diagram hierarchy on the right.
+                    Switch diagrams by selecting it from the Diagram hierarchy.
+                </li>
+                <li class="list-group-item">
+                    View any validation errors by hovering your mouse over the alert
+                    sign by any invalid cells. This will tell you why the cell is
+                    invalid and how to fix it.
+                </li>
+                <li class="list-group-item">
+                    You can see your created diagrams and diagrams that you have
+                    been invited to on your <a href="{{ url_for('account') }}">account</a> page.
+                    By selecting 'Manage Diagram' under any diagram you can view the creator of the
+                    diagram and its editors, invite new editors remove existing
+                    editors, and view the edit log for the diagram.
+                </li>
+                <li class="list-group-item">
+                    You can export an RDF representation of your diagram in TURTLE
+                    format by pressing the export button on the editor page. This
+                    will download a .ttl file containing the RDF representation. See
+                    an example output file
+                    <a href="{{ url_for('static', filename='example_export.ttl') }}">here</a>.
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 <br>
