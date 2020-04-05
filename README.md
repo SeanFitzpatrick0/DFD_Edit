@@ -6,6 +6,8 @@ Users can Invite others to collaborate on their DFDs and Export their DFD to an 
 
 This tool was created as part of my Final Year Project at Trinity College Dublin. My project is to investigate **Linked Data** representations of DFDs and how they can be used for automatic compliance validation of systems.
 
+The extension of this application for for GDPR-aware DFD Modelling can be accessed **[Here](https://github.com/SeanFitz1997/DFD_EDIT_usecase_extension)**.
+
 The live site can be accessed **[Here](http://dfdedit.tk/)**.
 
 ## Screen Shots
