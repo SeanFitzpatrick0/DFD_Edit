@@ -8,7 +8,7 @@ This tool was created as part of my Final Year Project at Trinity College Dublin
 
 The extension of this application for for GDPR-aware DFD Modelling can be accessed **[Here](https://github.com/SeanFitz1997/DFD_EDIT_usecase_extension)**.
 
-The live site can be accessed **[Here](http://dfdedit.tk/)**.
+The live site can be accessed **[Here](http://dfdedit.com/)**.
 
 ## Screen Shots
 
